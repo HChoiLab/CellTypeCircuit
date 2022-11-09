@@ -17,9 +17,12 @@ from numpy import e, pi
 
 import sys
 
+### Trial 7: add long range connections
+
 contrast = float(sys.argv[1])
 Chr2  = sys.argv[2]   # "SOM" or "PV"
 ChR2_str   = float(sys.argv[3])  # Strength of the ChR2 stimulation [Use 0.08 for SOM or PV for instance]
+p_far = float(sys.argv[4])  # proportion of SOM neurons with long-range connections
 
 ### Define a class of connectors that draw random connections within a disk around each neuron with a radius sigma
 class MyDistanceDependentProbabilityConnector(pyNN.connectors.MapConnector):    
@@ -51,6 +54,34 @@ class MyDistanceDependentProbabilityConnector(pyNN.connectors.MapConnector):
         connection_map = LazyArray(connection_map)    
         self._connect_with_map(projection, connection_map, distance_map)
 
+class MyDistanceDependentProbabilityConnector_far(pyNN.connectors.MapConnector):    
+    parameter_names = ('allow_self_connections', 'd_expression', 'n_connections')
+    def __init__(self, sigma, allow_self_connections=False, 
+                 rng=None, safe=True, n_connections=None, callback=None):
+        """
+        Create a new connector.
+        """
+        Connector.__init__(self, safe, callback)
+        assert isinstance(allow_self_connections, bool) or allow_self_connections == 'NoMutual'
+        self.sigma = sigma
+        self.n_connections = n_connections
+        self.allow_self_connections = allow_self_connections
+        self.rng = pyNN.connectors._get_rng(rng)
+    def connect(self, projection):
+        distance_map    = self._generate_distance_map(projection)
+        generator       = RandomDistribution('uniform', (0, 1), rng=self.rng)        
+        connection_map  = numpy.zeros(projection.shape, dtype=bool)        
+        for i in range(projection.shape[1]):
+            pidx = numpy.zeros(0, dtype=numpy.int32)
+            while len(pidx) < self.n_connections:
+                newidx = numpy.where(distance_map[:,i] > self.sigma)[0]
+                pidx   = numpy.concatenate((pidx, newidx.astype(numpy.int32)))
+                if projection.pre == projection.post:    
+                    pidx = pidx[numpy.where(pidx!=i)[0]]               
+            idx = numpy.random.permutation(pidx)[:self.n_connections]
+            connection_map[idx, i] = True
+        connection_map = LazyArray(connection_map)    
+        self._connect_with_map(projection, connection_map, distance_map)
 
 timer = Timer()
 ### Cell parameters ###
@@ -218,6 +249,8 @@ delays   = "%g + d/%g" %(dt, velocity)
 Ne         = int(epsilon*n_exc)
 Ni         = int(epsilon*n_inh/2)
 N          = int(epsilon*n_thalamus)
+Ni_far     = int(Ni * p_far)
+Ni_close   = Ni - Ni_far
 
 # Excitatory Projection to other cells
 exc_syn  = StaticSynapse(weight=g_exc, delay=delays)
@@ -231,9 +264,13 @@ inh_conn_pe = MyDistanceDependentProbabilityConnector(si_lat, allow_self_connect
 inh_conn_pp = MyDistanceDependentProbabilityConnector(si_lat, allow_self_connections=False, rng=rng, n_connections=Ni)
 
 # SOM Projection to other cells
-inh_conn_se = MyDistanceDependentProbabilityConnector(si_lat,  allow_self_connections=False, rng=rng, n_connections=Ni)
-inh_conn_sp = MyDistanceDependentProbabilityConnector(si_lat,  allow_self_connections=False, rng=rng, n_connections=Ni)
-inh_conn_ss = MyDistanceDependentProbabilityConnector(si_lat,  allow_self_connections=False, rng=rng, n_connections=Ni)
+inh_conn_se = MyDistanceDependentProbabilityConnector(si_lat,  allow_self_connections=False, rng=rng, n_connections=Ni_close)
+inh_conn_sp = MyDistanceDependentProbabilityConnector(si_lat,  allow_self_connections=False, rng=rng, n_connections=Ni_close)
+inh_conn_ss = MyDistanceDependentProbabilityConnector(si_lat,  allow_self_connections=False, rng=rng, n_connections=Ni_close)
+
+inh_conn_se_far = MyDistanceDependentProbabilityConnector_far(si_lat,  allow_self_connections=False, rng=rng, n_connections=Ni_far)
+inh_conn_sp_far = MyDistanceDependentProbabilityConnector_far(si_lat,  allow_self_connections=False, rng=rng, n_connections=Ni_far)
+inh_conn_ss_far = MyDistanceDependentProbabilityConnector_far(si_lat,  allow_self_connections=False, rng=rng, n_connections=Ni_far)
 
 # Thalamic Projection to other Cells for the Gaussian Stimulation
 ext_conn_e = MyDistanceDependentProbabilityConnector(st_lat, allow_self_connections=False, rng=rng, n_connections=N)
@@ -260,6 +297,11 @@ connections['som2exc'] = Projection(som_cells, exc_cells, inh_conn_se, inh_syn, 
 connections['som2pv']  = Projection(som_cells, pv_cells,  inh_conn_sp, inh_syn, receptor_type='inhibitory', space=space)
 connections['som2som'] = Projection(som_cells, som_cells, inh_conn_ss, inh_syn, receptor_type='inhibitory', space=space)
 
+# Long-range SOM projections (trial 7)
+connections['som2exc_far'] = Projection(som_cells, exc_cells, inh_conn_se_far, inh_syn, receptor_type='inhibitory', space=space)
+connections['som2pv_far']  = Projection(som_cells, pv_cells,  inh_conn_sp_far, inh_syn, receptor_type='inhibitory', space=space)
+connections['som2som_far'] = Projection(som_cells, som_cells, inh_conn_ss_far, inh_syn, receptor_type='inhibitory', space=space)
+
 # FeedForward Gaussian Input
 connections['ext01']   = Projection(thalamus, exc_cells, ext_conn_e, ext_syn_e, receptor_type='excitatory', space=space)
 connections['ext02']   = Projection(thalamus, pv_cells,  ext_conn_e, ext_syn_e, receptor_type='excitatory', space=space)
@@ -281,7 +323,7 @@ exc_cells.record(['spikes'], to_file=True)
 inh_cells.record(['spikes'], to_file=True)
 thalamus.record(['spikes'], to_file=True)
 
-filedir = '%s_%s_%s_%s'%(chr2_origin, contrast, Chr2, ChR2_str)
+filedir = '%s_%s_%s_%s_%s'%(chr2_origin, contrast, Chr2, ChR2_str, p_far)
 
 try:
     os.mkdir(filedir)
@@ -333,3 +375,16 @@ numpy.save(f'{filedir}/som_positions.npy',som_cells.positions)
 numpy.save(f'{filedir}/pv_positions.npy',pv_cells.positions)
 numpy.save(f'{filedir}/thalamus_positions.npy',thalamus.positions)
 
+s2e_far = connections['som2exc_far'].get('weights', format='list')
+s2e = connections['som2exc'].get('weights', format='list')
+
+s2p_far = connections['som2pv_far'].get('weights', format='list')
+s2p = connections['som2pv'].get('weights', format='list')
+
+s2s_far = connections['som2som_far'].get('weights', format='list')
+s2s = connections['som2som'].get('weights', format='list')
+
+som_projections = [s2e, s2e_far, s2p, s2p_far, s2s, s2s_far]
+
+with open(f'{filedir}/som_projections.pickle','wb') as file:
+    pickle.dump(som_projections, file)
