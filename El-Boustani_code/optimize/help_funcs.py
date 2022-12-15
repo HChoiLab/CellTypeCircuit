@@ -84,8 +84,6 @@ def getStimRateMeansPC(all_spikes, exc_positions):
 
 
 def getStimRateMeansPV(all_spikes, pv_positions):
-    # import the position data
-    pv_positions = np.load('%s/pv_positions.npy'%filedir)
     # only want the PC spikes here
     pv_spikes = all_spikes[8000:9000]
     # store the control times and the chr2 stimulation times
