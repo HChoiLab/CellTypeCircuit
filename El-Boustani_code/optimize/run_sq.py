@@ -609,6 +609,7 @@ def greedy_algorithm():
     current_rms = calculate_rms(results)
 
     print_log("INIT RMS: %s\n"%(current_rms))
+    #  plot_results(results, trialnum)
 
     while (simnum < 1000): 
         par_choice, par_sets  = random_update_parameters(sim_parameters)
@@ -626,8 +627,7 @@ def greedy_algorithm():
             pool.close()
             new_rms = calculate_rms(results)
 
-            #  plot_results(results)
-
+            #  plot_results(results, trialnum)
             if new_rms < current_rms:
                 #accept
                 print_log('%s accepted. RMS = %s\n'%(trialnum, new_rms))
@@ -637,8 +637,10 @@ def greedy_algorithm():
                 print_log('%s rejected. RMS = %s\n'%(trialnum,new_rms))
             print_log('%s\n'%time())
 
-#def plot_results(results):
+#def plot_results(results, trialnum):
     ### plot the medians and contrast curves to result_dir against target values 
+    #plt.savefig(f'{result_dir}/result_figs/{trialnum}.png')
+
 
 fitting_parameters = ['gext_baseline', 'g_exc', 'g_inh',
         'par_gext_rate0', 'par_gext_rate1',
@@ -695,6 +697,7 @@ if __name__ == '__main__':
     
     if not exists(result_dir):
         os.mkdir(result_dir)
+        os.mkdir(result_dir+'/result_figs')
 
     greedy_algorithm()
 
