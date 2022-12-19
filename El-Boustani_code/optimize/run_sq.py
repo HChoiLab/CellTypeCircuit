@@ -29,7 +29,7 @@ from help_funcs import *
 
 
 use_power_law = False
-result_dir = 'results_sq'
+result_dir = 'results_sq_gd'
 
 ### Define a class of connectors that draw random connections within a disk around each neuron with a radius sigma
 class MyDistanceDependentProbabilityConnector(pyNN.connectors.MapConnector):    
@@ -393,29 +393,40 @@ def pexec(args):
     ext_conn_2 = MyDistanceDependentProbabilityConnector(s_som, allow_self_connections=False, rng=rng, n_connections=N)
     ext_conn_3 = MyDistanceDependentProbabilityConnector(s_som, allow_self_connections=False, rng=rng, n_connections=N)
     ext_conn_4 = MyDistanceDependentProbabilityConnector(s_som, allow_self_connections=False, rng=rng, n_connections=N)
-    ext_syn_1  = StaticSynapse(weight=par_ext_syn_1*g_exc, delay=0.1) # originally 10*g_exc (excitatory to PV)
-    ext_syn_2  = StaticSynapse(weight=par_ext_syn_2*g_exc, delay=0.1) # originally 3*g_exc (excitatory to PC), just used 0.1,1
-    ext_syn_3  = StaticSynapse(weight=par_ext_syn_3*g_exc , delay=0.1) # (excitatory to SOM), implement contrast dependence here?
-    ext_syn_4  = StaticSynapse(weight=par_ext_syn_4*g_exc , delay=0.1) # originally 4*g_exc (inhibitory to SOM)
+    ext_syn_1  = StaticSynapse(weight=par_ext_syn_1*1.5e-3, delay=0.1) # originally 10*g_exc (excitatory to PV)
+    ext_syn_2  = StaticSynapse(weight=par_ext_syn_2*1.5e-3, delay=0.1) # originally 3*g_exc (excitatory to PC), just used 0.1,1
+    ext_syn_3  = StaticSynapse(weight=par_ext_syn_3*1.5e-3 , delay=0.1) # (excitatory to SOM), implement contrast dependence here?
+    ext_syn_4  = StaticSynapse(weight=par_ext_syn_4*1.5e-3 , delay=0.1) # originally 4*g_exc (inhibitory to SOM)
     
     # Creating the connections within the recurrent network
     print('Create Connections')
-    connections={}
-    connections['exc2exc'] = Projection(exc_cells, exc_cells, exc_conn_ee, exc_syn, receptor_type='excitatory', space=space)
-    connections['exc2pv']  = Projection(exc_cells, pv_cells,  exc_conn_ep, exc_syn, receptor_type='excitatory', space=space)
-    connections['exc2som'] = Projection(exc_cells, som_cells, exc_conn_es, exc_syn, receptor_type='excitatory', space=space)
-    connections['pv2exc']  = Projection(pv_cells, exc_cells,  inh_conn_pe, inh_syn, receptor_type='inhibitory', space=space)
-    #connections['pv2exc_far']  = Projection(pv_cells, exc_cells,  inh_conn_pe_far, inh_syn_strong, receptor_type='inhibitory', space=space)
-    connections['pv2pv']   = Projection(pv_cells, pv_cells,   inh_conn_pp, inh_syn, receptor_type='inhibitory', space=space)
-    #connections['pv2pv_far']   = Projection(pv_cells, pv_cells,   inh_conn_pp_far, inh_syn_strong, receptor_type='inhibitory', space=space) # trial 9
-    connections['som2exc'] = Projection(som_cells, exc_cells, inh_conn_se, inh_syn, receptor_type='inhibitory', space=space)
-    connections['som2pv']  = Projection(som_cells, pv_cells,  inh_conn_sp, inh_syn, receptor_type='inhibitory', space=space)
-    #connections['som2som'] = Projection(som_cells, som_cells, inh_conn_ss, inh_syn, receptor_type='inhibitory', space=space)
+    if use_power_law:
+        connections={}
+        connections['exc2exc'] = Projection(exc_cells, exc_cells, exc_conn_ee, exc_syn, receptor_type='excitatory', space=space)
+        connections['exc2pv']  = Projection(exc_cells, pv_cells,  exc_conn_ep, exc_syn, receptor_type='excitatory', space=space)
+        connections['exc2som'] = Projection(exc_cells, som_cells, exc_conn_es, exc_syn, receptor_type='excitatory', space=space)
+        connections['pv2exc']  = Projection(pv_cells, exc_cells,  inh_conn_pe, inh_syn, receptor_type='inhibitory', space=space)
+        connections['pv2pv']   = Projection(pv_cells, pv_cells,   inh_conn_pp, inh_syn, receptor_type='inhibitory', space=space)
+        connections['som2exc'] = Projection(som_cells, exc_cells, inh_conn_se, inh_syn, receptor_type='inhibitory', space=space)
+        connections['som2pv']  = Projection(som_cells, pv_cells,  inh_conn_sp, inh_syn, receptor_type='inhibitory', space=space)
+
+    else:
+        connections={}
+        connections['exc2exc'] = Projection(exc_cells, exc_cells, exc_conn_ee, exc_syn, receptor_type='excitatory', space=space)
+        connections['exc2pv']  = Projection(exc_cells, pv_cells,  exc_conn_ep, exc_syn, receptor_type='excitatory', space=space)
+        connections['exc2som'] = Projection(exc_cells, som_cells, exc_conn_es, exc_syn, receptor_type='excitatory', space=space)
+        connections['pv2exc']  = Projection(pv_cells, exc_cells,  inh_conn_pe, inh_syn_weak, receptor_type='inhibitory', space=space)
+        connections['pv2exc_far']  = Projection(pv_cells, exc_cells,  inh_conn_pe_far, inh_syn_strong, receptor_type='inhibitory', space=space)
+        connections['pv2pv']   = Projection(pv_cells, pv_cells,   inh_conn_pp, inh_syn, receptor_type='inhibitory', space=space)
+        connections['pv2pv_far']   = Projection(pv_cells, pv_cells,   inh_conn_pp_far, inh_syn_strong, receptor_type='inhibitory', space=space) # trial 9
+        connections['som2exc'] = Projection(som_cells, exc_cells, inh_conn_se, inh_syn_con, receptor_type='inhibitory', space=space)
+        connections['som2pv']  = Projection(som_cells, pv_cells,  inh_conn_sp, inh_syn_con, receptor_type='inhibitory', space=space)
+        connections['som2som'] = Projection(som_cells, som_cells, inh_conn_ss, inh_syn, receptor_type='inhibitory', space=space)
+
+        # Long-range SOM projections (trial 7)
+        connections['som2exc_far'] = Projection(som_cells, exc_cells, inh_conn_se_far, inh_syn, receptor_type='inhibitory', space=space)
+        connections['som2pv_far']  = Projection(som_cells, pv_cells,  inh_conn_sp_far, inh_syn, receptor_type='inhibitory', space=space)
     
-    # Long-range SOM projections (trial 7)
-    #connections['som2exc_far'] = Projection(som_cells, exc_cells, inh_conn_se_far, inh_syn, receptor_type='inhibitory', space=space)
-    #connections['som2pv_far']  = Projection(som_cells, pv_cells,  inh_conn_sp_far, inh_syn, receptor_type='inhibitory', space=space)
-    #connections['som2som_far'] = Projection(som_cells, som_cells, inh_conn_ss_far, inh_syn, receptor_type='inhibitory', space=space)
     
     # FeedForward Gaussian Input
     if not sim_spontaneous:
@@ -458,12 +469,12 @@ def pexec(args):
     print('SIM DONE', flush=True)
     
     if use_power_law:
-        sim_parameters['use_power_law'] = 'False'
+        sim_parameters['use_power_law'] = 'True'
         sim_parameters['a_e'] = a_e
         sim_parameters['a_p'] = a_p
         sim_parameters['a_s'] = a_s
     else:
-        sim_parameters['use_power_law'] = 'True'
+        sim_parameters['use_power_law'] = 'False'
     print_params(filedir+'/parameters.txt', sim_parameters)
     
     # Save spikes and cell positions in the network
@@ -543,31 +554,26 @@ def get_paramlist(sim_pars, simnum, trialnum):
     paramlist = []
     paramlist.append( ('%s_%s'%(trialnum,simnum), 0., 'Spont', sim_pars) )
     simnum += 1
-    for cont in [0.02,0.2,0.4,0.6,0.8,1.0]:
+    for cont in contrast_values:
         paramlist.append( ('%s_%s'%(trialnum,simnum), cont, 'PV', sim_pars) )
         simnum +=1
 
-    for cont in [0.02,0.2,0.4,0.6,0.8,1.0]:
+    for cont in contrast_values:
         paramlist.append( ('%s_%s'%(trialnum,simnum), cont, 'SOM', sim_pars) )
         simnum +=1
 
     return simnum, paramlist
 
-target_spontaneous_rates = [2.2, 3, 4]
-target_exc_contrast = [5 + 6*ct for ct in [0.02, 0.2,0.4,0.6,0.8,1.0]]
-target_pv_contrast = [12 + 16*ct for ct in [0.02, 0.2,0.4,0.6,0.8,1.0]]
-target_som_contrast = [8 + 15*ct for ct in [0.02, 0.2,0.4,0.6,0.8,1.0]]
-
 def calculate_rms(results):
     spont_rates = results[0]
-    pv_rates = results[1:7]
-    som_rates = results[7:13]
+    pv_rates = results[1:1+len(contrast_values)]
+    som_rates = results[1+len(contrast_values):1+2*len(contrast_values)]
 
     tot = 0.0
     for pi in range(3):
         tot += 2*(spont_rates[pi] - target_spontaneous_rates[pi])**2
 
-        for ci in range(6):
+        for ci in range(len(contrast_values)):
             tot += (pv_rates[ci][pi][0] - target_exc_contrast[pi])**2
             tot += (som_rates[ci][pi][0] - target_exc_contrast[pi])**2
 
@@ -579,24 +585,110 @@ def print_log(string):
     f.write(string)
     f.close()
 
-def greedy_algorithm():
+def print_simlog(sim_parameters,epoch):
+    f = open('%s/simpars.txt'%(result_dir), 'a')
+    f.write('epoch %s\n'%epoch)
+    for par in fitting_parameters:
+        f.write('%s    %s\n'%(par, sim_parameters[par]))
+    f.write('\n')
+    f.close()
+
+def gradient_descent(lr):
 
     simnum = 0
-
     # Initiate Parameters
     #gext_baseline, g_exc, g_inh, par_ext_rate0, par_ext_rate1 =  18., 1.5e-3, 20.*1.5e-3, 200., 400.
+
     sim_parameters = {}
-    sim_parameters['gext_baseline'] = 18.
+    sim_parameters['gext_baseline'] = 12.
     sim_parameters['g_exc'] = 1.5e-3
     sim_parameters['g_inh'] = 20.*1.5e-3
     sim_parameters['par_gext_rate0'] = 200.
-    sim_parameters['par_gext_rate1'] = 400.
-    sim_parameters['par_ext_syn_1'] = 10.
-    sim_parameters['par_ext_syn_2'] = 3.
-    sim_parameters['par_ext_syn_3'] = 2.
-    sim_parameters['par_ext_syn_4'] = 8.
-    sim_parameters['chr2_str_som']  = 0.1
-    sim_parameters['chr2_str_pv']  = 0.05
+    sim_parameters['par_gext_rate1'] = 200.
+    sim_parameters['par_ext_syn_1'] = 8.
+    sim_parameters['par_ext_syn_2'] = 8.
+    sim_parameters['par_ext_syn_3'] = 8.
+    sim_parameters['par_ext_syn_4'] = 4.
+    sim_parameters['chr2_str_som']  = 0.05
+    sim_parameters['chr2_str_pv']  = 0.1
+
+    epoch = 0
+    simnum, paramlist = get_paramlist(sim_parameters, simnum, epoch)
+
+    npars = len(paramlist)
+    pool = mp.Pool(npars) # Number of threads
+    
+    results = pool.map(pexec, paramlist)
+    pool.close()
+    current_rms = calculate_rms(results)
+    plot_results(results,result_dir, epoch)
+
+    print_log("EPOCH 0. RMS = %s\n"%(current_rms))
+    print_simlog(sim_parameters,epoch)
+
+    while (epoch < 100): 
+        epoch +=1
+        simnum, grad = compute_gradient(sim_parameters, current_rms, simnum, epoch) # array
+        new_sim_parameters = update_parameters(sim_parameters, grad, lr)
+
+        simnum, paramlist = get_paramlist(new_sim_parameters, simnum, epoch)
+
+        npars = len(paramlist)
+        pool = mp.Pool(npars) # Number of threads
+        
+        results = pool.map(pexec, paramlist)
+        pool.close()
+        current_rms = calculate_rms(results)
+        plot_results(results,result_dir, epoch)
+
+        print_log('EPOCH %s. RMS = %s\n'%(epoch, new_rms))
+        sim_parameters = new_sim_parameters
+        print_simlog(sim_parameters, epoch)
+
+
+def update_parameters(sim_parameters, grad, lr):
+    new_parameters = sim_parameters.copy()
+    for pi, parname in enumerate(fitting_parameters):
+        new_parameters[parname] = new_parameters[parname] - lr * grad[pi]
+    return new_parameters
+
+       
+global simnum
+simnum = 0
+def compute_gradient(sim_parameters, current_rms, simnum, epoch):
+    grad = np.zeros(len(fitting_parameters))
+    for pi, parname in enumerate(fitting_parameters):
+        incr = parameter_rules[parname][2]
+        delta_param = sim_parameters.copy()
+        delta_param[parname] += incr
+
+        simnum, paramlist = get_paramlist(delta_param, simnum, epoch)
+        npars = len(paramlist)
+        pool = mp.Pool(npars) # Number of threads
+        results = pool.map(pexec, paramlist)
+        pool.close()
+        new_rms = calculate_rms(results)
+
+        grad[pi] =  (new_rms - current_rms)/incr
+    return simnum, grad
+
+def greedy_algorithm():
+    simnum = 0
+    # Initiate Parameters
+    #gext_baseline, g_exc, g_inh, par_ext_rate0, par_ext_rate1 =  18., 1.5e-3, 20.*1.5e-3, 200., 400.
+
+    sim_parameters = {}
+    sim_parameters['gext_baseline'] = 12.
+    sim_parameters['g_exc'] = 1.5e-3
+    sim_parameters['g_inh'] = 20.*1.5e-3
+    sim_parameters['par_gext_rate0'] = 200.
+    sim_parameters['par_gext_rate1'] = 200.
+    sim_parameters['par_ext_syn_1'] = 8.
+    sim_parameters['par_ext_syn_2'] = 8.
+    sim_parameters['par_ext_syn_3'] = 8.
+    sim_parameters['par_ext_syn_4'] = 4.
+    sim_parameters['chr2_str_som']  = 0.05
+    sim_parameters['chr2_str_pv']  = 0.1
     
     trialnum = 0
     simnum, paramlist = get_paramlist(sim_parameters, simnum, trialnum)
@@ -607,11 +699,12 @@ def greedy_algorithm():
     results = pool.map(pexec, paramlist)
     pool.close()
     current_rms = calculate_rms(results)
+    plot_results(results,result_dir, trialnum)
 
     print_log("INIT RMS: %s\n"%(current_rms))
     #  plot_results(results, trialnum)
 
-    while (simnum < 1000): 
+    while (trialnum < 100): 
         par_choice, par_sets  = random_update_parameters(sim_parameters)
 
         for pset in par_sets:
@@ -626,8 +719,8 @@ def greedy_algorithm():
             results = pool.map(pexec, paramlist)
             pool.close()
             new_rms = calculate_rms(results)
+            plot_results(results,result_dir, trialnum)
 
-            #  plot_results(results, trialnum)
             if new_rms < current_rms:
                 #accept
                 print_log('%s accepted. RMS = %s\n'%(trialnum, new_rms))
@@ -641,13 +734,14 @@ def greedy_algorithm():
     ### plot the medians and contrast curves to result_dir against target values 
     #plt.savefig(f'{result_dir}/result_figs/{trialnum}.png')
 
-
 fitting_parameters = ['gext_baseline', 'g_exc', 'g_inh',
         'par_gext_rate0', 'par_gext_rate1',
         'par_ext_syn_1', 'par_ext_syn_2', 'par_ext_syn_3', 'par_ext_syn_4']
         #'chr2_str_som', 'chr2_str_pv']
 
-parameter_rules = {}   # List of lower boundary, upper boundary, and increments
+n_params = len(fitting_parameters)
+
+parameter_rules = {} # List of lower boundary, upper boundary, and increments
 parameter_rules['gext_baseline'] = [ 5., 30., 1.]
 parameter_rules['g_exc'] = [ 0.2e-3, 5.0e-3, 0.1e-3]
 parameter_rules['g_inh'] = [ 5.0e-3, 60.0e-3, 1e-3]
@@ -688,18 +782,12 @@ if __name__ == '__main__':
     t1 = time()
 
     mp.freeze_support()
-
-    Chr2_list = ['SOM', 'PV'] 
-    somlist = list(itertools.product( [0.02,0.2,0.4,0.6,0.8,1.0], ['SOM'], [0.05]))
-    pvlist = list(itertools.product( [0.02,0.2,0.4,0.6,0.8,1.0], ['PV'], [0.1]))
-    paramlist = somlist + pvlist
-    print(len(paramlist), "Simulations")
     
     if not exists(result_dir):
         os.mkdir(result_dir)
         os.mkdir(result_dir+'/result_figs')
 
-    greedy_algorithm()
+    gradient_descent(1.0)
 
     #paramlist = paramlist[:0]
 #    simnum = 0
