@@ -264,3 +264,12 @@ def plot_results(results, result_dir, trialnum):
 #sim_parameters['chr2_str_som']  = 0.1
 #sim_parameters['chr2_str_pv']  = 0.05
 
+
+def read_sim_params(fname):
+    togo = {}
+    f = open(fname)
+    for l in f:
+        stuff = l.split()
+        if len(stuff) <1: continue
+        togo[stuff[0]] = float(stuff[1]) 
+    return togo
