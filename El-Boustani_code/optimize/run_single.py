@@ -109,11 +109,22 @@ def get_norm(positions,a,c):
 
     return numpy.sum(probs)
 
-def pexec(args):
 
-    
-    sim_parameters = args[0]
-    print_results = args[1]
+def pexec(sim_parameters):
+
+    print_results = False
+
+    ## Stim parameters
+    Chr2 = sim_parameters['stim_type']
+    if Chr2 == 'Spont':
+        print("Spontaneous Sim")
+        sim_spontaneous = True
+    elif Chr2 in ['SOM','PV']:
+        contrast = sim_parameters['contrast']
+        print(Chr2, 'Stimulation at contrast', contrast)
+        sim_spontaneous = False
+    else:
+        raise Exception()
 
     ## Parameters for fitting
     gext_baseline = sim_parameters['gext_baseline']
@@ -568,7 +579,7 @@ def parallelinit(num_P_c, num_r_c):
     num_P_glo = num_P_c
     num_r_glo = num_r_c
 
-def get_paramlist(sim_pars, simnum, trialnum):
+def get_paramlist(sim_pars, simnum):
     #somlist = list(itertools.product( [0.02,0.2,0.4,0.6,0.8,1.0], ['SOM'], sim_pars))
     #pvlist = list(itertools.product( [0.02,0.2,0.4,0.6,0.8,1.0], ['PV'], sim_pars))
     paramlist = []
@@ -662,15 +673,16 @@ parameter_rules['g_syn_sp_far'] = [0.0001, 0.1, 0.0002]
 
 def single_run():
     sim_params = read_sim_params('init_pars.txt')
-    simnum, paramlist = get_paramlist(sim_params, simnum, epoch)
+    simnum = 0
+    simnum, paramlist = get_paramlist(sim_params, simnum)
     npars = len(paramlist)
     pool = mp.Pool(npars) # Number of threads
     results = pool.map(pexec, paramlist)
     pool.close()
-    rms = calculate_rms(results)
+    current_rms = calculate_rms(results)
 
     print_log("Single run. RMS = %s\n"%(current_rms))
-    plot_results(results,result_dir, epoch)
+    plot_results(results,result_dir, 0)
 
 import random
 def random_update_parameters(sim_parameters):
