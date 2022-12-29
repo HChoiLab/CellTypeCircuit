@@ -109,11 +109,9 @@ def get_norm(positions,a,c):
 
     return numpy.sum(probs)
 
-def pexec(args):
-
+def pexec(sim_parameters):
     
-    sim_parameters = args[0]
-    print_results = args[1]
+    print_results = False
 
     ## Parameters for fitting
     gext_baseline = sim_parameters['gext_baseline']
