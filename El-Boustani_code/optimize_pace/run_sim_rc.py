@@ -28,7 +28,7 @@ from help_funcs import *
 ### halve the background excitatory input weight to the excitatory cells
 ### RC: realisting connectivity
 
-use_power_law = True
+use_power_law = False
 
 print_results = int(sys.argv[1])
 
@@ -98,13 +98,13 @@ class MyDistanceDependentProbabilityConnector_far(pyNN.connectors.MapConnector):
         connection_map = LazyArray(connection_map)    
         self._connect_with_map(projection, connection_map, distance_map)
 
-def powerlaw(d,a):
-    return numpy.power(d,-a)
-
-def uni_powerlaw(d,a,c):
-    if d < c: return 1.0
-    else: return numpy.power(c,a)*numpy.power(d,-a)
-
+#def powerlaw(d,a):
+#    return numpy.power(d,-a)
+#
+#def uni_powerlaw(d,a,c):
+#    if d < c: return 1.0
+#    else: return numpy.power(c,a)*numpy.power(d,-a)
+#
 def get_norm(positions,a,c):
     origin = numpy.array([0.5,0.5])
     distances=[]
@@ -115,7 +115,7 @@ def get_norm(positions,a,c):
         distances.append(dist)
         probs.append(uni_powerlaw(dist,a,c))
 
-    return 1.0/numpy.sum(probs)
+    return numpy.sum(probs)
 
 
 
@@ -155,23 +155,23 @@ g_syn_ee      = sim_parameters['g_syn_ee']
 g_syn_ep      = sim_parameters['g_syn_ep']
 g_syn_es      = sim_parameters['g_syn_es']
 g_syn_pe      = sim_parameters['g_syn_pe']
-#g_syn_pe_far  = sim_parameters['g_syn_pe_far']
+g_syn_pe_far  = sim_parameters['g_syn_pe_far']
 g_syn_pp      = sim_parameters['g_syn_pp']
-#g_syn_pp_far  = sim_parameters['g_syn_pp_far']
+g_syn_pp_far  = sim_parameters['g_syn_pp_far']
 g_syn_se      = sim_parameters['g_syn_se']
 g_syn_sp      = sim_parameters['g_syn_sp']
 #g_syn_ss      = sim_parameters['g_syn_ss']
-#g_syn_se_far  = sim_parameters['g_syn_se_far']
-#g_syn_sp_far  = sim_parameters['g_syn_sp_far']
+g_syn_se_far  = sim_parameters['g_syn_se_far']
+g_syn_sp_far  = sim_parameters['g_syn_sp_far']
 
 epsilon       = sim_parameters['epsilon']  # 0.02
-#p_far_e       = sim_parameters['p_far_e']
-#p_far_p       = sim_parameters['p_far_p']
-#p_far_s       = sim_parameters['p_far_s']
+p_far_e       = sim_parameters['p_far_e']
+p_far_p       = sim_parameters['p_far_p']
+p_far_s       = sim_parameters['p_far_s']
 
-a_e           = sim_parameters['a_e']
-a_p           = sim_parameters['a_p']
-a_s           = sim_parameters['a_s']
+a_e = 3.0
+a_p = 3.0
+a_s = 1.0
 
 timer = Timer()
 ### Cell parameters ###
@@ -419,46 +419,19 @@ if not use_power_law:
     #N_sp_far    #Ni_far
     #N_ss_far    #0.2*Ni_far
 
-else:
-    ## Connectivity from Campagnola, et al. 2022
-    cprob_ee   = 0.06 
-    cprob_ep   = 0.42 
-    cprob_es   = 0.3  
-    cprob_pe   = 0.35
-    cprob_pp   = 0.39
-    cprob_ps   = 0  #0.09
-    cprob_se   = 0.23
-    cprob_sp   = 0.18
-    cprob_ss   = 0  #0.05
-
-    N_ee       = int(epsilon*n_exc*cprob_ee)
-    N_ep       = int(epsilon*n_exc*cprob_ep)
-    N_es       = int(epsilon*n_exc*cprob_es)
-    N_pe       = int(epsilon*n_inh/2*cprob_pe)
-    N_pp       = int(epsilon*n_inh/2*cprob_pp)
-    N_se       = int(epsilon*n_inh/2*cprob_se)
-    N_sp       = int(epsilon*n_inh/2*cprob_sp)
-
 # Excitatory Projection to other cells
 #exc_syn  = StaticSynapse(weight=g_exc, delay=delays)
 
 positions = all_cells.positions
 
-def make_dfunc(a, N, d = 0.1):
-    norm = get_norm(positions, a, d) * N
-    return f'{norm} if d<{d} else {norm}*{d}**(-{a})*d**(-{a})'
-
 print('Exc Projections')
 if use_power_law:
-    dfunc_ee = make_dfunc(a_e, N_ee)
-    exc_conn_ee = DistanceDependentProbabilityConnector(dfunc_ee, allow_self_connections=False, rng=rng)
+    norm_ee = get_norm(positions, a_e, 0.2) * Ne
+    exc_conn_ee = DistanceDependentProbabilityConnector(f'{norm_ee}*d**(-{a_e}) if d>0.02 else 1',allow_self_connections=False, rng=rng)
+    exc_conn_ep = DistanceDependentProbabilityConnector(f'{norm_ee}*d**(-{a_e}) if d>0.02 else 1',allow_self_connections=False, rng=rng)
 
-    dfunc_ep = make_dfunc(a_e, N_ep)
-    exc_conn_ep = DistanceDependentProbabilityConnector(dfunc_ep, allow_self_connections=False, rng=rng)
-
-    dfunc_es = make_dfunc(a_e, N_es)
-    exc_conn_es = DistanceDependentProbabilityConnector(dfunc_es, allow_self_connections=False, rng=rng)
-
+    norm_es = get_norm(positions, a_e, 0.2) * Ne*4
+    exc_conn_es = DistanceDependentProbabilityConnector(f'{norm_es}*d**(-{a_e}) if d>0.005 else 1',allow_self_connections=False, rng=rng)
 else:
     exc_conn_ee = MyDistanceDependentProbabilityConnector(se_lat, allow_self_connections=False, rng=rng, n_connections=N_ee_close)
     exc_conn_ep = MyDistanceDependentProbabilityConnector(se_lat, allow_self_connections=False, rng=rng, n_connections=N_ep_close)
@@ -479,22 +452,19 @@ syn_ee = StaticSynapse(weight = g_syn_ee, delay = delays)  #exc_syn
 syn_ep = StaticSynapse(weight = g_syn_ep, delay = delays) #exc_syn
 syn_es = StaticSynapse(weight = g_syn_es, delay = delays) #exc_syn
 syn_pe = StaticSynapse(weight = g_syn_pe, delay = delays) #inh_syn_weak
+syn_pe_far = StaticSynapse(weight = g_syn_pe_far, delay = delays) #inh_syn_strong
 syn_pp = StaticSynapse(weight = g_syn_pp, delay = delays) #inh_syn
+syn_pp_far = StaticSynapse(weight = g_syn_pp_far, delay = delays) #inh_syn_strong
 syn_se = StaticSynapse(weight = g_syn_se, delay = delays) #inh_syn_con
 syn_sp = StaticSynapse(weight = g_syn_sp, delay = delays) #inh_syn_con
 #syn_ss = StaticSynapse(weight = g_syn_ss, delay = delays) #inh_syn
-if not use_power_law:
-    syn_pe_far = StaticSynapse(weight = g_syn_pe_far, delay = delays) #inh_syn_strong
-    syn_pp_far = StaticSynapse(weight = g_syn_pp_far, delay = delays) #inh_syn_strong
-    syn_se_far = StaticSynapse(weight = g_syn_se_far, delay = delays) #inh_syn
-    syn_sp_far = StaticSynapse(weight = g_syn_sp_far, delay = delays) #inh_syn
+syn_se_far = StaticSynapse(weight = g_syn_se_far, delay = delays) #inh_syn
+syn_sp_far = StaticSynapse(weight = g_syn_sp_far, delay = delays) #inh_syn
 
 if use_power_law:
-    dfunc_pe = make_dfunc(a_p, N_pe)
-    inh_conn_pe = DistanceDependentProbabilityConnector(dfunc_pe,allow_self_connections=False, rng=rng)
-
-    dfunc_pp = make_dfunc(a_p, N_pp)
-    inh_conn_pp = DistanceDependentProbabilityConnector(dfunc_pp,allow_self_connections=False, rng=rng)
+    norm_pe = get_norm(positions,a_p, 0.2)* Ni 
+    inh_conn_pe = DistanceDependentProbabilityConnector(f'{norm_pe}*d**(-{a_p}) if d>0.02 else 1',allow_self_connections=False, rng=rng)
+    inh_conn_pp = DistanceDependentProbabilityConnector(f'{norm_pe}*d**(-{a_p}) if d>0.02 else 1',allow_self_connections=False, rng=rng)
 else:
     inh_conn_pe = MyDistanceDependentProbabilityConnector(si_lat, allow_self_connections=False, rng=rng, n_connections=N_pe_close)
     inh_conn_pp = MyDistanceDependentProbabilityConnector(si_lat, allow_self_connections=False, rng=rng, n_connections=N_pp_close)
@@ -505,12 +475,9 @@ else:
 # SOM Projection to other cells
 print('SOM Projections')
 if use_power_law:
-    dfunc_se = make_dfunc(a_s, N_se)
-    inh_conn_se = DistanceDependentProbabilityConnector(dfunc_se,allow_self_connections=False, rng=rng)
-
-    dfunc_sp = make_dfunc(a_s, N_sp)
-    inh_conn_sp = DistanceDependentProbabilityConnector(dfunc_sp,allow_self_connections=False, rng=rng)
-
+    norm_se = get_norm(positions,a_s, 0.2)*Ni
+    inh_conn_se = DistanceDependentProbabilityConnector(f'{norm_se}*d**(-{a_s}) if d>0.02 else 1',allow_self_connections=False, rng=rng)
+    inh_conn_sp = DistanceDependentProbabilityConnector(f'{norm_se}*d**(-{a_s}) if d>0.02 else 1',allow_self_connections=False, rng=rng)
 
 else:
     inh_conn_se = MyDistanceDependentProbabilityConnector(si_lat,  allow_self_connections=False, rng=rng, n_connections=N_se_close)
@@ -540,13 +507,13 @@ ext_syn_4  = StaticSynapse(weight=par_ext_syn_4*1.5e-3 , delay=0.1) # originally
 print('Create Connections')
 if use_power_law:
     connections={}
-    connections['exc2exc'] = Projection(exc_cells, exc_cells, exc_conn_ee, syn_ee, receptor_type='excitatory', space=space)
-    connections['exc2pv']  = Projection(exc_cells, pv_cells,  exc_conn_ep, syn_ep, receptor_type='excitatory', space=space)
-    connections['exc2som'] = Projection(exc_cells, som_cells, exc_conn_es, syn_es, receptor_type='excitatory', space=space)
-    connections['pv2exc']  = Projection(pv_cells, exc_cells,  inh_conn_pe, syn_pe, receptor_type='inhibitory', space=space)
-    connections['pv2pv']   = Projection(pv_cells, pv_cells,   inh_conn_pp, syn_pp, receptor_type='inhibitory', space=space)
-    connections['som2exc'] = Projection(som_cells, exc_cells, inh_conn_se, syn_se, receptor_type='inhibitory', space=space)
-    connections['som2pv']  = Projection(som_cells, pv_cells,  inh_conn_sp, syn_sp, receptor_type='inhibitory', space=space)
+    connections['exc2exc'] = Projection(exc_cells, exc_cells, exc_conn_ee, exc_syn, receptor_type='excitatory', space=space)
+    connections['exc2pv']  = Projection(exc_cells, pv_cells,  exc_conn_ep, exc_syn, receptor_type='excitatory', space=space)
+    connections['exc2som'] = Projection(exc_cells, som_cells, exc_conn_es, exc_syn, receptor_type='excitatory', space=space)
+    connections['pv2exc']  = Projection(pv_cells, exc_cells,  inh_conn_pe, inh_syn, receptor_type='inhibitory', space=space)
+    connections['pv2pv']   = Projection(pv_cells, pv_cells,   inh_conn_pp, inh_syn, receptor_type='inhibitory', space=space)
+    connections['som2exc'] = Projection(som_cells, exc_cells, inh_conn_se, inh_syn, receptor_type='inhibitory', space=space)
+    connections['som2pv']  = Projection(som_cells, pv_cells,  inh_conn_sp, inh_syn, receptor_type='inhibitory', space=space)
 
 else:
     connections={}
@@ -581,6 +548,35 @@ connections['ext2']    = Projection(addnoise, exc_cells, ext_conn_2, ext_syn_2, 
 connections['ext3']    = Projection(addnoise, som_cells, ext_conn_3, ext_syn_3, receptor_type='excitatory', space=space)
 connections['ext4']    = Projection(addnoise, som_cells, ext_conn_4, ext_syn_4, receptor_type='inhibitory', space=space)
 
+e2e = connections['exc2exc'].get(['weight'], format='list')
+e2p = connections['exc2pv'].get(['weight'], format='list')
+e2s = connections['exc2som'].get(['weight'], format='list')
+p2e = connections['pv2exc'].get(['weight'], format='list')
+p2p = connections['pv2pv'].get(['weight'], format='list')
+s2e = connections['som2exc'].get(['weight'], format='list')
+s2p = connections['som2pv'].get(['weight'], format='list')
+
+e2ef = connections['exc2exc_far'].get(['weight'], format='list')
+e2pf = connections['exc2pv_far'].get(['weight'], format='list')
+p2ef = connections['pv2exc_far'].get(['weight'], format='list')
+p2pf = connections['pv2pv_far'].get(['weight'], format='list')
+s2ef = connections['som2exc_far'].get(['weight'], format='list')
+s2pf = connections['som2pv_far'].get(['weight'], format='list')
+
+print('len(e2e) = '+str(len(e2e)))
+print('len(e2p) = '+str(len(e2p)))
+print('len(e2s) = '+str(len(e2s)))
+print('len(p2e) = '+str(len(p2e)))
+print('len(p2p) = '+str(len(p2p)))
+print('len(s2e) = '+str(len(s2e)))
+print('len(s2p) = '+str(len(s2p)))
+
+print('len(e2ef) = '+str(len(e2ef)))
+print('len(e2pf) = '+str(len(e2pf)))
+print('len(p2ef) = '+str(len(p2ef)))
+print('len(p2pf) = '+str(len(p2pf)))
+print('len(s2ef) = '+str(len(s2ef)))
+print('len(s2pf) = '+str(len(s2pf)))
 
 # read out time used for building
 buildCPUTime = timer.elapsedTime()
