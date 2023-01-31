@@ -1,9 +1,12 @@
 import statistics as st
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pickle
 
 contrast_values = [0.02, 0.5, 1.0]
+contrast_values = [0.02, 0.25, 0.5, 0.75,  1.0]
 target_spontaneous_rates = [2.2, 4, 3]
 target_exc_contrast = [5 + 6*ct for ct in  contrast_values]
 target_pv_contrast = [12 + 16*ct for ct in contrast_values]
@@ -11,37 +14,94 @@ target_som_contrast = [8 + 15*ct for ct in contrast_values]
 
 datapoints = 1 + 2 * len(contrast_values)
 
-def getSpontRateMedians(all_spikes):
+def makeRaster(all_spikes,file_name,tmin=1000,tmax=3000,order=1000,saveFig=True):       
     
+    # test out plotting code   
+    fig, axes = plt.subplots(3,1,figsize = (6,9),gridspec_kw = {'height_ratios':[4,1,1]})
+
+    ax0 = axes[0]
+    ax0.set_ylabel('Exc',fontsize=18)
+    ax0.set_xticks([])
+    ax0.set_ylim([0,8*order])
+    ax0.set_xlim([tmin,tmax])
+    for i in range(8*order):
+        spikeTimes = all_spikes[:8*order][i][all_spikes[:8*order][i]<tmax]
+        spikeTimes = spikeTimes[spikeTimes>tmin]
+        index = i*np.ones(len(spikeTimes))
+        ax0.plot(spikeTimes, index, linestyle='',marker='o', color='black',markersize=0.5)
+
+    ax1 = axes[1]
+    ax1.set_xlim([tmin,tmax])
+    ax1.set_ylim([0,order])
+    ax1.set_ylabel('PV',fontsize=18)
+    ax1.set_xticks([])
+    for i in range(1000):
+        spikeTimes = all_spikes[8*order:9*order][i][all_spikes[8*order:9*order][i]<tmax]
+        spikeTimes = spikeTimes[spikeTimes>tmin]
+        index = i*np.ones(len(spikeTimes))
+        ax1.plot(spikeTimes, index, linestyle='',marker='o', color='black',markersize=0.5)
+
+    
+    ax2 = axes[2]
+    ax2.set_ylim([0,order])
+    ax2.set_xlim([tmin,tmax])
+    ax2.set_ylabel('SST',fontsize=18)
+    ax2.set_xlabel('time, t (ms)',fontsize=20)
+    for i in range(1000):
+        spikeTimes = all_spikes[9*order:][i][all_spikes[9*order:][i]<tmax]
+        spikeTimes = spikeTimes[spikeTimes>tmin]
+        index = i*np.ones(len(spikeTimes))
+        ax2.plot(spikeTimes, index, linestyle='',marker='o', color='black',markersize=0.5)
+    ax2.tick_params(axis='x',labelsize=12)
+    
+    #filedir = f'rasters'
+    #
+    #try:
+    #    os.mkdir(filedir)
+    #except Exception:
+    #    pass
+    
+    plt.savefig('raster.png',bbox_inches='tight',dpi=200)
+    plt.close()
+
+def getSpontRateMedians(all_spikes,simtime):
+    tmin = 0
+    tmax = simtime
     # get the median spontaneous rates
     # PC
     exc_spikes = all_spikes[:8000]
     exc_rates = []
     for ni in range(8000): # loop through excitatory neurons
-        temp = exc_spikes[ni][exc_spikes[ni]<2000]
-        exc_rates = np.append(exc_rates, len(temp)/2)
+        spikeTimes = exc_spikes[ni][exc_spikes[ni]<tmax]
+        spikeTimes = spikeTimes[spikeTimes>tmin]
+        temp = len(spikeTimes)*1000/(tmax-tmin)
+        exc_rates = np.append(exc_rates, temp)
     exc_med = st.median(exc_rates)
 
     # PV
     pv_spikes = all_spikes[8000:9000]
     pv_rates = []
     for ni in range(1000): # loop through pv neurons
-        temp = pv_spikes[ni][pv_spikes[ni]<2000]
-        pv_rates = np.append(pv_rates, len(temp)/2)
+        spikeTimes = pv_spikes[ni][pv_spikes[ni]<tmax]
+        spikeTimes = spikeTimes[spikeTimes>tmin]        
+        temp = len(spikeTimes)*1000/(tmax-tmin)
+        pv_rates = np.append(pv_rates, temp)
     pv_med = st.median(pv_rates)
     
     # SOM
     som_spikes = all_spikes[9000:]
     som_rates = []
     for ni in range(1000): # loop through som neurons
-        temp = som_spikes[ni][som_spikes[ni]<2000]
-        som_rates = np.append(som_rates, len(temp)/2)
+        spikeTimes = som_spikes[ni][som_spikes[ni]<tmax]
+        spikeTimes = spikeTimes[spikeTimes>tmin] 
+        temp = len(spikeTimes)*1000/(tmax-tmin)
+        som_rates = np.append(som_rates, temp)
     som_med = st.median(som_rates)
     
     return [exc_med, pv_med, som_med]
 
 
-def getStimRateMeansPC(all_spikes, exc_positions):
+def getStimRateMeansPC(all_spikes, exc_positions, simtime):
     # only want the PC spikes here
     exc_spikes = all_spikes[:8000]
     # store the control times and the chr2 stimulation times
@@ -50,8 +110,10 @@ def getStimRateMeansPC(all_spikes, exc_positions):
     ii = 0
     is_control = True
     while True:
-        start_time = ii * 500 + 2000
+        start_time = ii * 500 + 1000
         stop_time = start_time + 40
+        if stop_time > simtime: break
+
         if is_control:
             control_times.append(start_time)
         else:
@@ -61,7 +123,6 @@ def getStimRateMeansPC(all_spikes, exc_positions):
             is_control = False
         else:
             is_control = True        
-        if stop_time > 5000: break
     # compute the rates of the cells distal to the chr2 stimulus
     control_spikes = []
     chr_spikes = []
@@ -91,7 +152,7 @@ def getStimRateMeansPC(all_spikes, exc_positions):
     return [ctrl_mean, chr2_mean]
 
 
-def getStimRateMeansPV(all_spikes, pv_positions):
+def getStimRateMeansPV(all_spikes, pv_positions, simtime):
     # only want the PC spikes here
     pv_spikes = all_spikes[8000:9000]
     # store the control times and the chr2 stimulation times
@@ -100,8 +161,10 @@ def getStimRateMeansPV(all_spikes, pv_positions):
     ii = 0
     is_control = True
     while True:
-        start_time = ii * 500 + 2000
+        start_time = ii * 500 + 1000
         stop_time = start_time + 40
+        if stop_time > simtime: break
+
         if is_control:
             control_times.append(start_time)
         else:
@@ -111,7 +174,6 @@ def getStimRateMeansPV(all_spikes, pv_positions):
             is_control = False
         else:
             is_control = True        
-        if stop_time > 5000: break
     # compute the rates of the cells distal to the chr2 stimulus
     control_spikes = []
     chr_spikes = []
@@ -141,7 +203,7 @@ def getStimRateMeansPV(all_spikes, pv_positions):
     return [ctrl_mean, chr2_mean]
 
 
-def getStimRateMeansSOM(all_spikes, som_positions):
+def getStimRateMeansSOM(all_spikes, som_positions, simtime):
     # only want the SOM spikes here
     som_spikes = all_spikes[9000:]
     # store the control times and the chr2 stimulation times
@@ -150,8 +212,10 @@ def getStimRateMeansSOM(all_spikes, som_positions):
     ii = 0
     is_control = True
     while True:
-        start_time = ii * 500 + 2000
+        start_time = ii * 500 + 1000
         stop_time = start_time + 40
+        if stop_time > simtime: break
+
         if is_control:
             control_times.append(start_time)
         else:
@@ -161,7 +225,6 @@ def getStimRateMeansSOM(all_spikes, som_positions):
             is_control = False
         else:
             is_control = True        
-        if stop_time > 5000: break
     # compute the rates of the cells distal to the chr2 stimulus
     control_spikes = []
     chr_spikes = []
@@ -197,7 +260,7 @@ def plot_results(results, result_dir, trialnum):
     testPV = testPVstim[:,1,0]
     testSST = testPVstim[:,2,0]
 
-    testSSTstim = np.array(results[1:1+len(contrast_values)])
+    testSSTstim = np.array(results[1+len(contrast_values):])
     testExc += testSSTstim[:,0,0]
     testPV += testSSTstim[:,1,0]
     testSST += testSSTstim[:,2,0]
@@ -209,6 +272,14 @@ def plot_results(results, result_dir, trialnum):
     testExc = testExc/2
     testPV = testPV/2
     testSST = testSST/2
+
+    PVstim_Exc = testPVstim[:,0,1]
+    PVstim_PV  = testPVstim[:,1,1]
+    PVstim_SST = testPVstim[:,2,1]
+
+    SSTstim_Exc = testSSTstim[:,0,1]
+    SSTstim_PV  = testSSTstim[:,1,1]
+    SSTstim_SST = testSSTstim[:,2,1]
     
     from matplotlib.ticker import FormatStrFormatter
     fig, ax = plt.subplots(1,4,figsize = (12,3))
@@ -218,6 +289,8 @@ def plot_results(results, result_dir, trialnum):
     #testExc = np.random.uniform(np.min(target_exc_contrast),np.max(target_exc_contrast),6)
     ax[0].plot(contVec,target_exc_contrast,linestyle='-',marker='^',color='black',label='target',markersize=10)
     ax[0].plot(contVec,testExc,linestyle='-',marker='o',color='black',label='model',markersize=10)
+    ax[0].plot(contVec,PVstim_Exc,linestyle='-',marker='o',color='blue',label='PV stim',markersize=10)
+    ax[0].plot(contVec,SSTstim_Exc,linestyle='-',marker='o',color='darkorange',label='SST stim',markersize=10)
     ax[0].set_title('Exc',fontsize=15)
     ax[0].yaxis.set_major_formatter(FormatStrFormatter('%.0f'))
     ax[0].set_xlabel('contrast %',fontsize=18)
@@ -228,6 +301,8 @@ def plot_results(results, result_dir, trialnum):
     ax[1].yaxis.set_major_formatter(FormatStrFormatter('%.0f'))
     ax[1].plot(contVec,target_pv_contrast,linestyle='-',marker='^',color='black',label='target',markersize=10)
     ax[1].plot(contVec,testPV,linestyle='-',marker='o',color='black',label='model',markersize=10)
+    ax[1].plot(contVec,PVstim_PV,linestyle='-',marker='o',color='blue',markersize=10)
+    ax[1].plot(contVec,SSTstim_PV,linestyle='-',marker='o',color='darkorange',markersize=10)
     ax[1].set_xlabel('contrast %',fontsize=18)
 
     #testSST= np.random.uniform(np.min(target_som_contrast),np.max(target_som_contrast),6)
@@ -235,6 +310,8 @@ def plot_results(results, result_dir, trialnum):
     ax[2].yaxis.set_major_formatter(FormatStrFormatter('%.0f'))
     ax[2].plot(contVec,testSST,linestyle='-',marker='o',color='black',label='model',markersize=10)
     ax[2].plot(contVec,target_som_contrast,linestyle='-',marker='^',color='black',label='target',markersize=10)
+    ax[2].plot(contVec,PVstim_SST,linestyle='-',marker='o',color='blue',markersize=10)
+    ax[2].plot(contVec,SSTstim_SST,linestyle='-',marker='o',color='darkorange',markersize=10)
     ax[2].set_xlabel('contrast %',fontsize=18)
 
     dum = [1,2,3] # equally-spaced
@@ -276,6 +353,7 @@ def read_sim_params(fname):
     togo = {}
     f = open(fname)
     for l in f:
+        if l[0] == '#': continue
         stuff = l.split()
         if len(stuff) <1: continue
         togo[stuff[0]] = float(stuff[1]) 
