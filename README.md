@@ -12,3 +12,13 @@ Trial 5:
 Trial 6: Local/Distal ChR2 stimulation of SST/PV with contrast curves.
 
 Trial 7: add long-range SOM connections.
+
+Trial 9: LRv22b and LRv22 contain versions used in results produced around COSYNE submission
+
+## newCode
+
+Code is rewritten in pyNEST3.3.0. NESTML required for installing the dendritic integration model ```iaf_cond_exp_dend.nestm```.
+
+```python iaf_p39.py``` to install the model.
+
+```run.py``` is for the base model without the dendritic nonlinearity, ```nlrun.py``` uses the dendritic model for excitatory neurons.
