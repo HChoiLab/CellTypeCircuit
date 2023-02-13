@@ -4,18 +4,22 @@ import nest
 import numpy as np
 import os
 from help_funcs import *
+import sys
 
 
-def run_simulation(sim_parameters, condition):
+def run_simulation(sim_parameters, condition, rngseed = ''):
     print("SIMULATING:", condition)
 
     nest.ResetKernel()
     nest.SetKernelStatus({'local_num_threads': 3})
+    if rngseed != '':
+        nest.rng_seed = rngseed
+        rng = np.random.default_rng(rngseed)
 
     def reset_sim():
         nest.SetKernelStatus({'biological_time': 0.})
         for popu in [exc_neurons, pv_neurons, som_neurons]:
-            dVms =  {"V_m": [Vr+(Vt-Vr)*np.random.rand() for x in range(len(popu))]}
+            dVms =  {"V_m": [Vr+(Vt-Vr)*rng.random() for x in range(len(popu))]}
             popu.set(dVms)
     
     ## Simulation Parameters
@@ -40,19 +44,15 @@ def run_simulation(sim_parameters, condition):
     g_syn_ep      = sim_parameters['g_syn_ep'] * 1000.0
     g_syn_es      = sim_parameters['g_syn_es'] * 1000.0
     g_syn_pe      = sim_parameters['g_syn_pe'] * 1000.0
-    g_syn_pe_far  = sim_parameters['g_syn_pe_far'] * 1000.0
     g_syn_pp      = sim_parameters['g_syn_pp'] * 1000.0
-    g_syn_pp_far  = sim_parameters['g_syn_pp_far'] * 1000.0
     g_syn_se      = sim_parameters['g_syn_se'] * 1000.0
     g_syn_sp      = sim_parameters['g_syn_sp'] * 1000.0
-    #g_syn_ss      = sim_parameters['g_syn_ss']
-    g_syn_se_far  = sim_parameters['g_syn_se_far'] * 1000.0
-    g_syn_sp_far  = sim_parameters['g_syn_sp_far'] * 1000.0
     
     epsilon       = sim_parameters['epsilon']  # 0.02
     p_far_e       = sim_parameters['p_far_e']
     p_far_p       = sim_parameters['p_far_p']
     p_far_s       = sim_parameters['p_far_s']
+    p_chr2_random = sim_parameters['p_chr2_random']
     
     ### Cell parameters ###
     tau_m     =  25.  # ms Membrane time constant
@@ -259,8 +259,7 @@ def run_simulation(sim_parameters, condition):
     
     ### Visual and Chr2 stimulation ###
     if not sim_spontaneous:
-        gext_rate     = par_gext_rate0 + par_gext_rate1*contrast  #contrast varies between 0.02 and 1
-        intensities   = gext_rate*np.ones(nb_repeats)
+        gext_rate     = par_gext_rate0 + par_gext_rate1*np.tanh(contrast/0.3)*0.3  #contrast varies between 0.02 and 1
         Chr2_times = np.array([500.+1000.*i for i in range(nb_repeats)]) # Induce an instantaneous synaptic conductance in the target population at time 0 every other trial
         Chr2_proba = 1.    # percentage of cells that will receive the conductance change
     
@@ -315,6 +314,10 @@ def run_simulation(sim_parameters, condition):
             if dist[0] < stim_range:
                 #print(dist[0], 'CONNECT!', nest.GetPosition(targets[ni]))
                 nest.Connect(source_chr2, targets[ni], syn_spec = chr_syn)
+            else:
+                roll = rng.random()
+                if p_chr2_random > roll:
+                    nest.Connect(source_chr2, targets[ni], syn_spec = chr_syn)
     
         #print('STIM CONNECTIONS:', len(nest.GetConnections(source_chr2, targets)))
         #print(nest.GetStatus(source_chr2, 'spike_times'))
@@ -389,20 +392,26 @@ def run_simulation(sim_parameters, condition):
 
 
 
-result_dir = 'results'
-if not os.path.exists(result_dir):
-    os.makedirs(result_dir)
-
 sim_parameters = read_sim_params('sim_parameters.txt')
 sim_parameters['stim_type'] = 'SOM'
 #sim_parameters['contrast'] = 0.5
-contrast_values = [0.02,0.05,0.1,0.2,0.3]
+contrast_values = [0.02, 0.05,0.1,0.18, 0.33]
+
+seed_list = [ 12345, 23456, 34567, 45678, 56789, 67890, 78901, 89012, 90123, 1234 ]
+seed_list = []
+for sstr in sys.argv[1:]:
+    seed_list.append(int(sstr))
+print("seeds: ", seed_list)
 
 conditions =  [['Spont',0]] +[  ['PV', c] for c in contrast_values] + [ ['SOM', c] for c in contrast_values] 
-#conditions = conditions[:6]
-conditions = conditions[1:6]
-conditions = [ ['PV', 0.21] , ['SOM', 0.21] ]
-print(conditions)
-for condition in conditions:
-    run_simulation(sim_parameters, condition)
+
+print("conditions: ", conditions)
+
+for rngseed in seed_list:
+    result_dir = 'results_%s'%rngseed
+    if not os.path.exists(result_dir):
+        os.makedirs(result_dir)
+
+    for condition in conditions:
+        run_simulation(sim_parameters, condition, rngseed = rngseed)
 
