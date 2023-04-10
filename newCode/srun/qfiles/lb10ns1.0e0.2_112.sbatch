@@ -9,4 +9,4 @@
 cd /storage/home/hcoda1/5/skim3438/scratch/CellTypeCircuit/newCode/data/lb10ns1.0e0.2
 module load anaconda3
 conda activate nest3
-python ../../code/run_single_v2.py 7 4
+python ../../code/run_single_v2.py 9 9
