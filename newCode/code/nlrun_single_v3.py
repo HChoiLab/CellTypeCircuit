@@ -138,7 +138,7 @@ def run_simulation(sim_parameters, condition, rngseed = ''):
     s_time        = 30.                 # sigma in time of the Gaussian
     #nb_repeats    = 10                  # number of repeated stimulation
     time_spacing  = 0.                  # time in between two stimulation
-    sim_delay     = 100.
+    sim_delay     = 200.
     #s_xyies       = [(np.array(s_xy)*i).tolist() for i in np.ones(nb_repeats)]
     
     ### Simulation parameters ###

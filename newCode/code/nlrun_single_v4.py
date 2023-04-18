@@ -6,6 +6,24 @@ import os
 from help_funcs import *
 import sys
 
+from scipy.integrate import dblquad
+import numpy as np
+
+def gaussian(x, y, sigma):
+    return np.exp(-(x**2 + y**2) / (2 * sigma**2))
+
+def step(x, y):
+    return np.logical_and(np.abs(x) < 0.5, np.abs(y) < 0.5)
+
+def integrand(x, y, sigma):
+    return gaussian(x, y, sigma) * step(x, y)
+
+def get_gaussian_norm(sigma):
+    result, _ = dblquad(lambda x, y: integrand(x, y, sigma), -np.inf, np.inf,
+                    lambda x: -np.inf, lambda x: np.inf)
+    return result
+
+
 def run_simulation(sim_parameters, condition, rngseed = ''):
     print("SIMULATING:", condition)
 
@@ -31,27 +49,27 @@ def run_simulation(sim_parameters, condition, rngseed = ''):
     gext_baseline = sim_parameters['gext_baseline']
     #g_exc         = sim_parameters['g_exc']
     #g_inh         = sim_parameters['g_inh']
-    g_tha_e        = sim_parameters['g_tha_e'] * 1000.0
-    g_tha_p        = sim_parameters['g_tha_p'] * 1000.0
+    g_tha_e        = sim_parameters['g_tha_e'] 
+    g_tha_p        = sim_parameters['g_tha_p'] 
     par_gext_rate0 = sim_parameters['par_gext_rate0']
     par_gext_rate1 = sim_parameters['par_gext_rate1']
     
-    par_ext_syn_1 = sim_parameters['par_ext_syn_1'] * 1000.0
-    par_ext_syn_2 = sim_parameters['par_ext_syn_2'] * 1000.0
-    par_ext_syn_3 = sim_parameters['par_ext_syn_3'] * 1000.0
-    par_ext_syn_4 = sim_parameters['par_ext_syn_4'] * 1000.0
-    chr2_str_som  = sim_parameters['chr2_str_som'] * 1000.0
-    chr2_str_pv   = sim_parameters['chr2_str_pv'] * 1000.0
+    par_ext_exc   = sim_parameters['par_ext_exc']
+    par_ext_pv    = sim_parameters['par_ext_pv']
+    par_ext_sst_e = sim_parameters['par_ext_sst_e'] 
+    par_ext_sst_i = sim_parameters['par_ext_sst_i']
+    chr2_str_som  = sim_parameters['chr2_str_som']
+    chr2_str_pv   = sim_parameters['chr2_str_pv'] 
     chr2_rampt    = sim_parameters['chr2_rampt'] 
     chr2_duration    = sim_parameters['chr2_duration'] 
     
-    g_syn_ee      = sim_parameters['g_syn_ee'] * 1000.0
-    g_syn_ep      = sim_parameters['g_syn_ep'] * 1000.0
-    g_syn_es      = sim_parameters['g_syn_es'] * 1000.0
-    g_syn_pe      = sim_parameters['g_syn_pe'] * 1000.0
-    g_syn_pp      = sim_parameters['g_syn_pp'] * 1000.0
-    g_syn_se      = sim_parameters['g_syn_se'] * 1000.0
-    g_syn_sp      = sim_parameters['g_syn_sp'] * 1000.0
+    g_syn_ee      = sim_parameters['g_syn_ee'] 
+    g_syn_ep      = sim_parameters['g_syn_ep'] 
+    g_syn_es      = sim_parameters['g_syn_es'] 
+    g_syn_pe      = sim_parameters['g_syn_pe'] 
+    g_syn_pp      = sim_parameters['g_syn_pp'] 
+    g_syn_se      = sim_parameters['g_syn_se'] 
+    g_syn_sp      = sim_parameters['g_syn_sp'] 
     #g_syn_ss      = sim_parameters['g_syn_ss']
 
     alpha_ei_inv  = 1./sim_parameters['alpha_ei']
@@ -59,9 +77,13 @@ def run_simulation(sim_parameters, condition, rngseed = ''):
     
     epsilon       = sim_parameters['epsilon']  # 0.02
     epsilon_th    = sim_parameters['epsilon_th']   #0.02
-    p_far_e       = sim_parameters['p_far_e']
-    p_far_p       = sim_parameters['p_far_p']
-    p_far_s       = sim_parameters['p_far_s']
+    p_sigma_e       = sim_parameters['p_sigma_e']
+    p_sigma_p       = sim_parameters['p_sigma_p']
+    p_sigma_s       = sim_parameters['p_sigma_s']
+    norm_e        = get_gaussian_norm(p_sigma_e)
+    norm_p        = get_gaussian_norm(p_sigma_p)
+    norm_s        = get_gaussian_norm(p_sigma_s)
+
     p_chr2_random = sim_parameters['p_chr2_random']
     
     ### Cell parameters ###
@@ -76,6 +98,10 @@ def run_simulation(sim_parameters, condition, rngseed = ''):
     e_rev_E   =   0.  # mV Reversal Potential for excitatory synapses
     e_rev_I   = -75.  # mV Reversal Potential for inhibitory synapses
     
+    ### laser parameters ###
+    laser_spread = 0.1   # mm spatial standard deviation of laser intensity
+
+    nb_repeats = int(sim_parameters['nb_repeats'])
     
     exc_params = {
         'tau_syn_exc'  : tau_exc,  'tau_syn_inh'  : tau_inh,
@@ -110,7 +136,7 @@ def run_simulation(sim_parameters, condition, rngseed = ''):
     s_xy          = [size/5., size/5.]  # sigma of the gaussian [sx, sy]
     m_time        = 100.         # time to peak of the Gaussian
     s_time        = 30.                 # sigma in time of the Gaussian
-    nb_repeats    = 10                  # number of repeated stimulation
+    #nb_repeats    = 10                  # number of repeated stimulation
     time_spacing  = 0.                  # time in between two stimulation
     sim_delay     = 200.
     #s_xyies       = [(np.array(s_xy)*i).tolist() for i in np.ones(nb_repeats)]
@@ -151,19 +177,19 @@ def run_simulation(sim_parameters, condition, rngseed = ''):
     
     # Connect external Poisson noise
     n2e_conn = {'rule': 'fixed_indegree', 'indegree': Nth}#, 'mask': {'circular': {'radius': s_som}}}
-    n2e_syn = {'synapse_model':'static_synapse','receptor_type': 1, 'weight': par_ext_syn_2*1.5e-3, 'delay': 0.1}
+    n2e_syn = {'synapse_model':'static_synapse','receptor_type': 1, 'weight': par_ext_exc, 'delay': 0.1}
     n2e_synapses = nest.Connect(addnoise, exc_neurons, n2e_conn, syn_spec=n2e_syn)
     
     n2p_conn = {'rule': 'fixed_indegree', 'indegree': Nth}#, 'mask': {'circular': {'radius': s_som}}}
-    n2p_syn = {'synapse_model':'static_synapse', 'weight': par_ext_syn_1*1.5e-3, 'delay': 0.1}
+    n2p_syn = {'synapse_model':'static_synapse', 'weight': par_ext_pv, 'delay': 0.1}
     n2p_synapses = nest.Connect(addnoise, pv_neurons, n2p_conn, syn_spec=n2p_syn)
     
     n2s_conne = {'rule': 'fixed_indegree', 'indegree': Nth}#, 'mask': {'circular': {'radius': s_som}}}
-    n2s_syne = {'synapse_model':'static_synapse', 'weight': par_ext_syn_3*1.5e-3, 'delay': 0.1}
+    n2s_syne = {'synapse_model':'static_synapse', 'weight': par_ext_sst_e, 'delay': 0.1}
     n2s_e_synapses = nest.Connect(addnoise, som_neurons, n2s_conne, syn_spec=n2s_syne)
     
     n2s_conni = {'rule': 'fixed_indegree', 'indegree': Nth}#, 'mask': {'circular': {'radius': s_som}}}
-    n2s_syni = {'synapse_model':'static_synapse', 'weight': -par_ext_syn_4*1.5e-3, 'delay': 0.1}
+    n2s_syni = {'synapse_model':'static_synapse', 'weight': -par_ext_sst_i, 'delay': 0.1}
     n2s_i_synapses = nest.Connect(addnoise, som_neurons, n2s_conni, syn_spec=n2s_syni)
     
     
@@ -179,81 +205,75 @@ def run_simulation(sim_parameters, condition, rngseed = ''):
     cprob_sp   = 0.18
     cprob_ss   = 0  #0.05
     
-    #p_far_e    = 0.3
-    #p_far_p    = 0.3
-    #p_far_s    = 0.6
+    p_far_e    = 0.3
+    p_far_p    = 0.3
+    p_far_s    = 0.6
     
-    N_ee       = int(epsilon*n_exc*cprob_ee)
-    N_ee_far   = int(N_ee*p_far_e)
-    N_ee_close = N_ee - N_ee_far
+    p_ee       = epsilon*cprob_ee
     
-    N_ep       = int(epsilon*n_exc*cprob_ep)
-    N_ep_far   = int(N_ep*p_far_e)
-    N_ep_close = N_ep - N_ep_far
+    p_ep       = epsilon*cprob_ep
     
-    N_es       = int(epsilon*n_exc*cprob_es)
+    p_es       = epsilon*cprob_es
     
-    N_pe       = int(epsilon*n_inh/2*cprob_pe)
-    N_pe_far   = int(N_pe*p_far_p)
-    N_pe_close = N_pe - N_pe_far
+    p_pe       = epsilon*cprob_pe
     
-    N_pp       = int(epsilon*n_inh/2*cprob_pp)
-    N_pp_far   = int(N_pp*p_far_p)
-    N_pp_close = N_pp - N_pp_far
+    p_pp       = epsilon*cprob_pp
     
-    N_se       = int(epsilon*n_inh/2*cprob_se)
-    N_se_far   = int(N_se*p_far_s)
-    N_se_close = N_se - N_se_far
+    p_se       = epsilon*cprob_se
     
-    N_sp       = int(epsilon*n_inh/2*cprob_sp)
-    N_sp_far   = int(N_sp*p_far_s)
-    N_sp_close = N_sp - N_sp_far
+    p_sp       = epsilon*cprob_sp
+
+    print(int(n_exc*p_ee), int(n_exc*p_ep), int(n_exc*p_es), int(n_pv*p_pe),int(n_pv*p_pp),int(n_pv*p_se),int(n_pv*p_sp))
     
-    ratio_in = se_lat*se_lat*np.pi
-    ratio_out = 1.0 - ratio_in
-    p_in_ee = N_ee_close/(ratio_in * n_exc)
-    p_out_ee =  N_ee_far/(ratio_out * n_exc)
-    e2e_mask = nest.logic.conditional(nest.spatial.distance <= se_lat, p_in_ee,p_out_ee)
-    e2e_conn = {'rule': 'pairwise_bernoulli', 'p': e2e_mask}
+    #e2e_conn = {'rule': 'pairwise_bernoulli',
+    #     'mask': {'rectangular': {'lower_left': [-0.5, -0.5],
+    #                                 'upper_right': [0.5, 0.5]}}, 
+    #        'p': (p_ee/norm_e)*nest.spatial_distributions.gaussian(nest.spatial.distance, std=p_sigma_e)}
+    e2e_conn = {'rule': 'fixed_indegree',
+                   'p': nest.spatial_distributions.gaussian(nest.spatial.distance, std=p_sigma_e),
+                   'indegree': int(n_exc*p_ee)}
     e2e_syn = {'synapse_model':'static_synapse','receptor_type': 1, 'weight': g_syn_ee, 'delay': 0.1 + nest.spatial.distance/velocity}
     nest.Connect(exc_neurons, exc_neurons, e2e_conn, syn_spec = e2e_syn)
     
-    p_in_ep = N_ep_close/(ratio_in * n_exc)
-    p_out_ep =  N_ep_far/(ratio_out * n_exc)
-    e2p_mask = nest.logic.conditional(nest.spatial.distance <= se_lat, p_in_ep, p_out_ep)
-    e2p_conn = {'rule': 'pairwise_bernoulli', 'p': e2p_mask}
+    #e2p_conn = {'rule': 'pairwise_bernoulli', 'p': (p_ep/norm_e)*nest.spatial_distributions.gaussian(nest.spatial.distance, std=p_sigma_e)}
+    e2p_conn = {'rule': 'fixed_indegree',
+                   'p': nest.spatial_distributions.gaussian(nest.spatial.distance, std=p_sigma_e),
+                   'indegree': int(n_exc*p_ep)}
     e2p_syn = {'synapse_model':'static_synapse', 'weight': g_syn_ep, 'delay': 0.1 + nest.spatial.distance/velocity}
     nest.Connect(exc_neurons, pv_neurons, e2p_conn, syn_spec = e2p_syn)
     
-    e2s_conn = {'rule': 'pairwise_bernoulli', 'p': N_es/n_exc}
+    #e2s_conn = {'rule': 'pairwise_bernoulli', 'p': (p_es/norm_e)*nest.spatial_distributions.gaussian(nest.spatial.distance, std=p_sigma_e)}
+    e2s_conn = {'rule': 'fixed_indegree',
+                   'p': nest.spatial_distributions.gaussian(nest.spatial.distance, std=p_sigma_e),
+                   'indegree': int(n_exc*p_es)}
     e2s_syn = {'synapse_model':'static_synapse', 'weight': g_syn_es, 'delay': 0.1 + nest.spatial.distance/velocity}
     nest.Connect(exc_neurons, som_neurons, e2s_conn, syn_spec = e2s_syn)
     
-    p_in_pe = N_pe_close/(ratio_in * n_pv)
-    p_out_pe =  N_pe_far/(ratio_out * n_pv)
-    p2e_mask = nest.logic.conditional(nest.spatial.distance <= se_lat, p_in_pe,p_out_pe)
-    p2e_conn = {'rule': 'pairwise_bernoulli', 'p': p2e_mask}
+    #p2e_conn = {'rule': 'pairwise_bernoulli', 'p': (p_pe/norm_p)*nest.spatial_distributions.gaussian(nest.spatial.distance, std=p_sigma_p)}
+    p2e_conn = {'rule': 'fixed_indegree',
+                   'p': nest.spatial_distributions.gaussian(nest.spatial.distance, std=p_sigma_p),
+                   'indegree': int(n_pv*p_pe)}
     p2e_syn = {'synapse_model':'static_synapse','receptor_type': 2, 'weight': g_syn_pe, 'delay': 0.1 + nest.spatial.distance/velocity}
     nest.Connect(pv_neurons, exc_neurons, p2e_conn, syn_spec = p2e_syn)
     
-    p_in_pp = N_pp_close/(ratio_in * n_pv)
-    p_out_pp =  N_pp_far/(ratio_out * n_pv)
-    p2p_mask = nest.logic.conditional(nest.spatial.distance <= se_lat, p_in_pp,p_out_pp)
-    p2p_conn = {'rule': 'pairwise_bernoulli', 'p': p2p_mask}
+    #p2p_conn = {'rule': 'pairwise_bernoulli', 'p': (p_pp/norm_p)*nest.spatial_distributions.gaussian(nest.spatial.distance, std=p_sigma_p)}
+    p2p_conn = {'rule': 'fixed_indegree',
+                   'p': nest.spatial_distributions.gaussian(nest.spatial.distance, std=p_sigma_p),
+                   'indegree': int(n_pv*p_pp)}
     p2p_syn = {'synapse_model':'static_synapse', 'weight': -g_syn_pp, 'delay': 0.1 + nest.spatial.distance/velocity}
     nest.Connect(pv_neurons, pv_neurons, p2p_conn, syn_spec = p2p_syn)
     
-    p_in_se = N_se_close/(ratio_in * n_som)
-    p_out_se =  N_se_far/(ratio_out * n_som)
-    s2e_mask = nest.logic.conditional(nest.spatial.distance <= se_lat, p_in_se,p_out_se)
-    s2e_conn = {'rule': 'pairwise_bernoulli', 'p': s2e_mask}
+    #s2e_conn = {'rule': 'pairwise_bernoulli', 'p': (p_se/norm_s)*nest.spatial_distributions.gaussian(nest.spatial.distance, std=p_sigma_s)}
+    s2e_conn = {'rule': 'fixed_indegree',
+                   'p': nest.spatial_distributions.gaussian(nest.spatial.distance, std=p_sigma_s),
+                   'indegree': int(n_pv*p_se)}
     s2e_syn = {'synapse_model':'static_synapse','receptor_type': 3, 'weight': g_syn_se, 'delay': 0.1 + nest.spatial.distance/velocity}
     nest.Connect(som_neurons, exc_neurons, s2e_conn, syn_spec = s2e_syn)
     
-    p_in_sp = N_sp_close/(ratio_in * n_som)
-    p_out_sp =  N_sp_far/(ratio_out * n_som)
-    s2p_mask = nest.logic.conditional(nest.spatial.distance <= se_lat, p_in_sp,p_out_sp)
-    s2p_conn = {'rule': 'pairwise_bernoulli', 'p': s2p_mask}
+    #s2p_conn = {'rule': 'pairwise_bernoulli', 'p': (p_sp/norm_s)*nest.spatial_distributions.gaussian(nest.spatial.distance, std=p_sigma_s)}
+    s2p_conn = {'rule': 'fixed_indegree',
+                   'p': nest.spatial_distributions.gaussian(nest.spatial.distance, std=p_sigma_p),
+                   'indegree': int(n_pv*p_sp)}
     s2p_syn = {'synapse_model':'static_synapse', 'weight': -g_syn_sp, 'delay': 0.1 + nest.spatial.distance/velocity}
     nest.Connect(som_neurons, pv_neurons, s2p_conn, syn_spec = s2p_syn)
     
@@ -277,7 +297,6 @@ def run_simulation(sim_parameters, condition, rngseed = ''):
     if not sim_spontaneous:
         #gext_rate     = par_gext_rate0 + par_gext_rate1*contrast  #contrast varies between 0.02 and 1
         gext_rate     = par_gext_rate0 + par_gext_rate1*np.tanh(contrast/0.3)*0.3  #contrast varies between 0.02 and 1
-        intensities   = gext_rate*np.ones(nb_repeats)
         Chr2_times = np.array([sim_delay + simtime*(1.+2.*i) for i in range(nb_repeats)]) # Induce an instantaneous synaptic conductance in the target population at time 0 every other trial
         Chr2_proba = 1.    # percentage of cells that will receive the conductance change
     
@@ -357,9 +376,6 @@ def run_simulation(sim_parameters, condition, rngseed = ''):
                     nest.Connect(source_chr2, targets[ni], syn_spec = chr_syn)
                     print('random chr2 connect!')
     
-        #print('STIM CONNECTIONS:', len(nest.GetConnections(source_chr2, targets)))
-        #print(nest.GetStatus(source_chr2, 'spike_times'))
-    
     ### Recording
     exc_sr = nest.Create('spike_recorder',)
     pv_sr = nest.Create('spike_recorder')
@@ -372,13 +388,14 @@ def run_simulation(sim_parameters, condition, rngseed = ''):
     #nest.Connect(addnoise, noise_spikes)
     
     ### CHECK Connections ###
-    #print('e2e:',len(nest.GetConnections(exc_neurons, exc_neurons)))
-    #print('e2p:',len(nest.GetConnections(exc_neurons, pv_neurons)))
-    #print('e2s:',len(nest.GetConnections(exc_neurons, som_neurons)))
-    #print('p2e:',len(nest.GetConnections(pv_neurons, exc_neurons)))
-    #print('p2p:',len(nest.GetConnections(pv_neurons, pv_neurons)))
-    #print('s2e:',len(nest.GetConnections(som_neurons, exc_neurons)))
-    #print('s2p:',len(nest.GetConnections(som_neurons, pv_neurons)))
+    if False:
+        print('e2e:',len(nest.GetConnections(exc_neurons, exc_neurons)))
+        print('e2p:',len(nest.GetConnections(exc_neurons, pv_neurons)))
+        print('e2s:',len(nest.GetConnections(exc_neurons, som_neurons)))
+        print('p2e:',len(nest.GetConnections(pv_neurons, exc_neurons)))
+        print('p2p:',len(nest.GetConnections(pv_neurons, pv_neurons)))
+        print('s2e:',len(nest.GetConnections(som_neurons, exc_neurons)))
+        print('s2p:',len(nest.GetConnections(som_neurons, pv_neurons)))
     
     simtime = nb_repeats * simtime + (nb_repeats - 1) * time_spacing + sim_delay
     nest.Simulate(simtime)
