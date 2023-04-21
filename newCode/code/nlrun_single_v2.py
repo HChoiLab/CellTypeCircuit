@@ -63,6 +63,8 @@ def run_simulation(sim_parameters, condition, rngseed = ''):
     p_far_p       = sim_parameters['p_far_p']
     p_far_s       = sim_parameters['p_far_s']
     p_chr2_random = sim_parameters['p_chr2_random']
+
+    nb_repeats    = int(sim_parameters['nb_repeats'])
     
     ### Cell parameters ###
     tau_m     =  25.  # ms Membrane time constant
@@ -110,7 +112,6 @@ def run_simulation(sim_parameters, condition, rngseed = ''):
     s_xy          = [size/5., size/5.]  # sigma of the gaussian [sx, sy]
     m_time        = 100.         # time to peak of the Gaussian
     s_time        = 30.                 # sigma in time of the Gaussian
-    nb_repeats    = 10                  # number of repeated stimulation
     time_spacing  = 0.                  # time in between two stimulation
     sim_delay     = 200.
     #s_xyies       = [(np.array(s_xy)*i).tolist() for i in np.ones(nb_repeats)]
