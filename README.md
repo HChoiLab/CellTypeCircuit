@@ -1,4 +1,13 @@
-# CellTypeCircuit
+# PV/SST Circuit model
+
+This code reproduces the figures from the paper "Cell-type specific lateral inhibition distinctly transforms perceptual and corresponding neural sensitivity" by ... (paper details).
+
+## Required Installations
+
+Running simulations require installation of [```PyNEST```](https://nest-simulator.readthedocs.io/en/v3.3/ref_material/pynest_apis.html) (version 3.3.0 used) and [NESTML](https://nestml.readthedocs.io/en/latest/) (version 
+
+
+# (Old Version)
 
 ## El-Boustani
 ```El-Boustani``` contains original and modified code of the grid model received from Sami El-Boustani.
