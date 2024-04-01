@@ -444,13 +444,14 @@ if __name__=="__main__":
     
     try:
         rngseed = int(sys.argv[1])
-        stim_type = int(sys.argv[2])
-        contrast = int(sys.argv[3])
+        cond_i = int(sys.argv[2])
     except IndexError:
         print("Provide three arguments: RNG seed, stimulation type (Spont, PV, or SST), and contrast value (0-1)")
         sys.exit()
 
-    condition = [stim_type, contrast]
+    #assert stim_type in ['SST', 'PV', 'Spont']
+    #condition = [stim_type, contrast]
+    condition = conditions[cond_i]
     
     
     result_dir = 'results_%s'%rngseed
