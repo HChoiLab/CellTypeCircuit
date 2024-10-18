@@ -1,33 +1,14 @@
 # PV/SST Circuit model
 
-This code reproduces the figures from the paper "Cell-type specific lateral inhibition distinctly transforms perceptual and corresponding neural sensitivity" by ... (paper details).
+This code reproduces the modeling results for the paper ["Cell-type specific lateral inhibition distinctly transforms perceptual and corresponding neural sensitivity"](https://www.biorxiv.org/content/10.1101/2023.11.10.566605v1) by Joseph Del Rosario, Stefano Coletta, Soon Ho Kim, Zach Mobille, Kayla Peelman, Brice Williams, Alan J Otsuki, Alejandra Del Castillo Valerio, Kendell Worden, Lou T. Blanpain, Lyndah Lovell, Hannah Choi, Bilal Haider.
 
 ## Required Installations
 
-Running simulations require installation of [```PyNEST```](https://nest-simulator.readthedocs.io/en/v3.3/ref_material/pynest_apis.html) (version 3.3.0 used) and [NESTML](https://nestml.readthedocs.io/en/latest/) (version 
+Running simulations require installation of [PyNEST](https://nest-simulator.readthedocs.io/en/v3.3/ref_material/pynest_apis.html) (version 3.3.0 used) and [NESTML](https://nestml.readthedocs.io/en/latest/) (version 5.1.0).
 
-
-# (Old Version)
-
-## El-Boustani
-```El-Boustani``` contains original and modified code of the grid model received from Sami El-Boustani.
-
-Trial 3: Fixed capacitance from 0.2 to 0.25nF. Spontaneous, PV stim, and SOM Stim code.
-
-Trial 4: Added multiplier to external stimulation. Use, for example: ```python gmult.py 0.1```, in which the default height of the Gaussian will be multiplied by the factor 0.1.
-
-Trial 5:
-
-Trial 6: Local/Distal ChR2 stimulation of SST/PV with contrast curves.
-
-Trial 7: add long-range SOM connections.
-
-Trial 9: LRv22b and LRv22 contain versions used in results produced around COSYNE submission
-
-## newCode
-
-Code is rewritten in pyNEST3.3.0. NESTML required for installing the dendritic integration model ```iaf_cond_exp_dend.nestm```.
-
-```python iaf_p39.py``` to install the model.
-
-```run.py``` is for the base model without the dendritic nonlinearity, ```nlrun.py``` uses the dendritic model for excitatory neurons.
+NESTML is used to install the dendritic integration model ```iaf_cond_exp_dend.nestml```. To install the model, first follow the directions [here](https://nestml.readthedocs.io/en/latest/installation.html) to configure settings. Then, use the commands 
+```
+cd code/custom_model
+python install_dendritic.py
+```
+to install the model.
