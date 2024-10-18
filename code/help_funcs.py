@@ -374,7 +374,7 @@ import scipy.stats
 #     else:
 #         return [ctrl_mean, chr2_mean, ctrl_err, chr2_err]
     
-def getStimRateMeans_v2(exc_spikes, exc_positions, rates=False, nrepeats = 10, skip= 0, simtime=800, delay=200, binlen = 200, radius = 0.25, pop=False):
+def getStimRateMeans_v2(exc_spikes, exc_positions, rates=False, nrepeats = 6, skip= 0, simtime=800, delay=200, binlen = 200, radius = 0.25, pop=False):
     # store the control times and the chr2 stimulation times
     control_times = []
     chr_times = []
@@ -496,3 +496,14 @@ def naka_rushton(x, m, C, n, k):
 def fit_naka_rushton(x, y, sigma=None, p0 = p0, bounds=bounds):
     params, cov = curve_fit(naka_rushton, x, y, bounds=bounds, sigma=sigma, p0=p0, maxfev = 1000000)
     return params, cov
+
+
+def get_slope(m,C,n,k):
+    cvals = np.arange(0.02,0.33,0.01)
+    yvals = naka_rushton(cvals, m, C, n, k)
+    
+    slopes = []
+    for i in range(1, len(cvals)):
+        slopes.append((yvals[i]-yvals[i-1])/0.01)
+    maxslope = np.max(slopes)
+    return maxslope, cvals[slopes.index(maxslope)]
