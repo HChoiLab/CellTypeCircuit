@@ -25,5 +25,5 @@ cd work_dir/base_a0.07_pf0.8
 then run
 ```
 python ../../code/run_distal_stim.py 1 1
-'''
+```
 where the first argument is the RNG seed and the second is the stimulation condition (vary from 1-10 for each seed). We recommend running simulations in parallel if you intend on running many seeds. After running simulations, the contrast response curves can be plotted using ```Fig3.ipynb```.
