@@ -21,7 +21,7 @@ Figs. 4C-D use alpha = 0.07 (strength of dendritic nonlinearity) and pfar_sst = 
 ```
 python initiallize_parameters.py 0.07 0.8
 cd work_dir/base_a0.07_pf0.8
-'''
+```
 then run
 ```
 python ../../code/run_distal_stim.py 1 1
