@@ -446,7 +446,8 @@ if __name__=="__main__":
         rngseed = int(sys.argv[1])
         cond_i = int(sys.argv[2])
     except IndexError:
-        print("Provide three arguments: RNG seed, stimulation type (Spont, PV, or SST), and contrast value (0-1)")
+        print("Provide two arguments: RNG seed and id for simulation conditions.")
+        print("Second argument should be 0 for spontaneous conditions, 1-5 for PV stim, 6-10 for SST stim with contrasts 0.02, 0.05, 0.1, 0.18, and 0.33")
         sys.exit()
 
     #assert stim_type in ['SST', 'PV', 'Spont']
