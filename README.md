@@ -2,6 +2,8 @@
 
 This code reproduces the modeling results for the paper ["Cell-type specific lateral inhibition distinctly transforms perceptual and corresponding neural sensitivity"](https://www.biorxiv.org/content/10.1101/2023.11.10.566605v2) by Joseph Del Rosario, Stefano Coletta, Soon Ho Kim, Zach Mobille, Kayla Peelman, Brice Williams, Alan J Otsuki, Alejandra Del Castillo Valerio, Kendell Worden, Lou T. Blanpain, Lyndah Lovell, Hannah Choi, Bilal Haider.
 
+<img src="https://github.com/user-attachments/assets/83eac280-935d-41bb-aacd-e6018a2a4192" alt="image" width="400">
+
 ## Required Installations
 
 Running simulations require installation of [PyNEST](https://nest-simulator.readthedocs.io/en/v3.3/ref_material/pynest_apis.html) (version 3.3.0 used) and [NESTML](https://nestml.readthedocs.io/en/latest/) (version 5.1.0). (NOTE: We used the aforementioned NESTML version to produce the figures in the manuscript, but the current versions of pyNEST and NESTML cause issues when installing the dendritic integration model. We are working on a revised script to address this.)
