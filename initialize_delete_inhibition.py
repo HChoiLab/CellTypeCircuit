@@ -3,7 +3,6 @@ sys.path.append('code')
 from help_funcs import *
 
 simname = 'base'
-
 sim_params = read_sim_params('parameter_sets/base.txt')
 
 for del_range in [0.0, 0.3, 1.0]:
