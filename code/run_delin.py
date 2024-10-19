@@ -1,5 +1,6 @@
 ### Delete inhibition in all neurons inside stim_range
 ## For supplemental figure 10
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import nest
