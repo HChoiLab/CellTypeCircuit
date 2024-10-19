@@ -27,3 +27,7 @@ then run
 python ../../code/run_distal_stim.py 1 1
 ```
 where the first argument is the RNG seed and the second is the stimulation condition (vary from 1-10 for each seed). We recommend running simulations in parallel if you intend on running many seeds. After running simulations, the contrast response curves can be plotted using ```Fig3.ipynb```.
+
+
+## Fig. S12
+To produce the data for figures S12A, S12B, and S12C, run the scripts "run_local_stim.py", "run_0p25_stim.py", and "run_distal_stim.py" over the parameter values pfar_sst = 0.2, 0.5, 0.8 and alpha = 0.04, 0.05, 0.06, 0.07, 0.08 with 10 different network seeds across contrast values = 0.02, 0.05, 0.1, 0.18, 0.33.
