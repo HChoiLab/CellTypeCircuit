@@ -32,5 +32,15 @@ where the first argument is the RNG seed and the second is the stimulation condi
 
 Repeat distal stimulations for alpha 0.04-0.07 (0.002 linear spacing) and pf 0-0.8 (0.1 spacing)  over 100 seeds. The notebook computes slope changes and plots distributions. Pre-compiled MI changes are stored in ```compiled_data/Exc_heatmaps.mat```.
 
+## Fig. S10
+
+Test for inhibition stabilization. Use ```code/run_delin.py``` to run simulations with inhibition deleted from the network. Inhibition can be deleted locally or globally by varying the ```del_range``` parameter. Initialize using
+```
+python initialize_delete_inhibition.py
+cd work_dir/dl_0.0
+python ../../run_delin.py 1 1
+```
+etc.
+
 ## Fig. S12
 To produce the data for figures S12A, S12B, and S12C, run the scripts "run_local_stim.py", "run_0p25_stim.py", and "run_distal_stim.py" over the parameter values pfar_sst = 0.2, 0.5, 0.8 and alpha = 0.04, 0.05, 0.06, 0.07, 0.08 with 10 different network seeds across contrast values = 0.02, 0.05, 0.1, 0.18, 0.33.
