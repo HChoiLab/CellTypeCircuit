@@ -51,6 +51,9 @@ python ../../run_delin.py 1 1
 etc.
 
 ## Fig. S12
-To produce the data for figures S12A, S12B, and S12C, run the scripts ```run_local_stim.py```, ```run_0p25_stim.py```, and ```run_distal_stim.py``` over the parameter values pfar_sst = 0.2, 0.5, 0.8 and alpha = 0.04, 0.05, 0.06, 0.07, 0.08 with 10 different network seeds across contrast values = 0.02, 0.05, 0.1, 0.18, 0.33.
+To produce the data for figure S12, run the scripts ```run_local_stim.py```, ```run_0p25_stim.py```, and ```run_distal_stim.py``` over the parameter values pfar_sst = 0.2, 0.5, 0.8 and alpha = 0.04, 0.05, 0.06, 0.07, 0.08 with 10 different network seeds across contrast values = 0.02, 0.05, 0.1, 0.18, 0.33.
 
 To produce the plots, run the jupyter notebook ```FigS12.ipynb```
+
+## Fig. S22
+To produce the date for figure S22, run the script ```run_varyDist_stim.py``` with pfar_sst = 0.8, alpha = 0.08 over 11 network seeds across contrast values = 0.02, 0.05, 0.1, 0.18, 0.33. The fourth argument to ```run_varyDist_stim.py``` is the laser position, which should range from 0 to 0.5. We use 11 evenly-spaced values in Fig. S22. To produce the plots, run the notebook ```FigS22.ipynb```
