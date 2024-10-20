@@ -51,4 +51,6 @@ python ../../run_delin.py 1 1
 etc.
 
 ## Fig. S12
-To produce the data for figures S12A, S12B, and S12C, run the scripts "run_local_stim.py", "run_0p25_stim.py", and "run_distal_stim.py" over the parameter values pfar_sst = 0.2, 0.5, 0.8 and alpha = 0.04, 0.05, 0.06, 0.07, 0.08 with 10 different network seeds across contrast values = 0.02, 0.05, 0.1, 0.18, 0.33.
+To produce the data for figures S12A, S12B, and S12C, run the scripts ```run_local_stim.py```, ```run_0p25_stim.py```, and ```run_distal_stim.py``` over the parameter values pfar_sst = 0.2, 0.5, 0.8 and alpha = 0.04, 0.05, 0.06, 0.07, 0.08 with 10 different network seeds across contrast values = 0.02, 0.05, 0.1, 0.18, 0.33.
+
+To produce the plots, run the jupyter notebook ```FigS12.ipynb```
