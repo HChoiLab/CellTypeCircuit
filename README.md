@@ -63,4 +63,4 @@ To produce the data for figure S13, run the ```run_distal_stim.py``` script with
 To produce the data for figure S22, run the script ```run_varyDist_stim.py``` with pfar_sst = 0.8, alpha = 0.08 over 11 network seeds across contrast values = 0.02, 0.05, 0.1, 0.18, 0.33. The fourth argument to ```run_varyDist_stim.py``` is the laser position, which should range from 0 to 0.5. We use 11 evenly-spaced values in Fig. S22. To produce the plots, run the notebook ```FigS22.ipynb```
 
 ## Fig S24
-To produce the data for figure S24, run ```run_distal_stim.py``` with pfar = 0.8, alpha = 0.07 over 9 network seeds across contrast values = 0.02, 0.05, 0.1, 0.18, 0.33 for both PV and SST stimulation protocols. To produce the plots, run the notebook ```FigS24.ipynb```
+To produce the data for figure S24, run ```run_distal_stim_noAnti.py``` with pfar = 0.2, 0.8, alpha = 0.07 over 9 network seeds across contrast values = 0.02, 0.05, 0.1, 0.18, 0.33 for both PV and SST stimulation protocols. To produce the plots, run the notebook ```FigS24.ipynb```
