@@ -50,6 +50,9 @@ python ../../run_delin.py 1 1
 ```
 etc.
 
+## Fig. S11
+To produce the data for figure S11, run the ```run_distal_stim.py``` script with parameter values pfar_sst = 0.8, alpha = 0.07 in the spontaneous condition and at the contrast values = 0.05 for both PV and SST stimulation. To produce the figures, run the notebook ```FigS11.ipynb```
+
 ## Fig. S12
 To produce the data for figure S12, run the scripts ```run_local_stim.py```, ```run_0p25_stim.py```, and ```run_distal_stim.py``` over the parameter values pfar_sst = 0.2, 0.5, 0.8 and alpha = 0.04, 0.05, 0.06, 0.07, 0.08 with 10 different network seeds across contrast values = 0.02, 0.05, 0.1, 0.18, 0.33.
 
