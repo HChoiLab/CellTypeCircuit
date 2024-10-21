@@ -1,6 +1,6 @@
 # PV/SST Circuit model
 
-This code reproduces the modeling results for the paper ["Cell-type specific lateral inhibition distinctly transforms perceptual and corresponding neural sensitivity"](https://www.biorxiv.org/content/10.1101/2023.11.10.566605v2) by Joseph Del Rosario, Stefano Coletta, Soon Ho Kim, Zach Mobille, Kayla Peelman, Brice Williams, Alan J Otsuki, Alejandra Del Castillo Valerio, Kendell Worden, Lou T. Blanpain, Lyndah Lovell, Hannah Choi, Bilal Haider.
+This code reproduces the modeling results for the paper ["Lateral inhibition in V1 controls neural & perceptual contrast sensitivity"](https://www.biorxiv.org/content/10.1101/2023.11.10.566605v2) by Joseph Del Rosario, Stefano Coletta, Soon Ho Kim, Zach Mobille, Kayla Peelman, Brice Williams, Alan J Otsuki, Alejandra Del Castillo Valerio, Kendell Worden, Lou T. Blanpain, Lyndah Lovell, Hannah Choi, Bilal Haider.
 
 <div style="text-align: center;">
 <img src="https://github.com/user-attachments/assets/83eac280-935d-41bb-aacd-e6018a2a4192" alt="image" width="400">
