@@ -77,12 +77,6 @@ def run_simulation(sim_parameters, condition, rngseed = '', verbose=False):
     e_rev_E   =   0.  # mV Reversal Potential for excitatory synapses
     e_rev_I   = -75.  # mV Reversal Potential for inhibitory synapses
     
-    
-#     exc_params = {
-#         'tau_syn_exc'  : tau_exc,  'tau_syn_inh'  : tau_inh,
-#         'E_L'     : El,       'V_reset'    : Vr,       'V_th'   : Vt,
-#         'C_m'         : c_m,      't_ref' : tau_ref,  'E_exc'    : e_rev_E,
-#         'E_inh'    : e_rev_I, 'alpha_ei'  :  alpha_ei_inv}
 
     exc_params = {
         'tau_syn_exc'  : tau_exc,  'tau_syn_inh'  : tau_inh,
