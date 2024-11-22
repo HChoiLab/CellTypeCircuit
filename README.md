@@ -14,7 +14,7 @@ conda env create -f environment.yml
 ```
 the above command will create an environment with the correct versions.
 
-NESTML is used to install the dendritic integration model ```iaf_cond_exp_dend.nestml```. To install the model, first follow the directions [here](https://nestml.readthedocs.io/en/latest/installation.html) to configure settings. In particular, you may need to adjust the ```~/anaconda/env/nest/bin/nest-config``` file with the correct compiler directories. Then, use the commands 
+NESTML is used to install the dendritic integration model ```iaf_cond_exp_dend.nestml```. To install the model, first (if applicable) follow the directions [here](https://nestml.readthedocs.io/en/latest/installation.html) to configure settings. In particular, you may need to adjust the ```~/anaconda/env/nest/bin/nest-config``` file with the correct compiler path if you are using a conda environment. Then, use the commands 
 ```
 cd code/custom_model
 python install_dendritic.py
