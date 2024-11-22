@@ -8,11 +8,11 @@ This code reproduces the modeling results for the paper ["Lateral inhibition in 
 
 ## Required Installations
 
-Running simulations require installation of [PyNEST](https://nest-simulator.readthedocs.io/en/v3.3/ref_material/pynest_apis.html) (version 3.3.0 used) and [NESTML](https://nestml.readthedocs.io/en/latest/) (version 5.1.0). Please note that the current version of PyNEST and NESTML may differ from the one used in the study, so we recommend using the aforementioned versions. We have provided an Anaconda environment file ```environment.yml``` to assist installation:
+Running simulations require installation of [PyNEST](https://nest-simulator.readthedocs.io/en/v3.3/ref_material/pynest_apis.html) (version 3.3.0 used) and [NESTML](https://nestml.readthedocs.io/en/latest/) (version 5.1.0). Please note that the current versions of PyNEST and NESTML differ from the ones used in the study, so we recommend using the aforementioned versions. We have provided an Anaconda environment file ```environment.yml``` to assist installation:
 ```
 conda env create -f environment.yml
 ```
-will create an environment with the correct versions.
+the above command will create an environment with the correct versions.
 
 NESTML is used to install the dendritic integration model ```iaf_cond_exp_dend.nestml```. To install the model, first follow the directions [here](https://nestml.readthedocs.io/en/latest/installation.html) to configure settings. In particular, you may need to adjust the ```~/anaconda/env/nest/bin/nest-config``` file with the correct compiler directories. Then, use the commands 
 ```
